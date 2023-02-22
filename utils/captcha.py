@@ -14,11 +14,11 @@ from LittlePaimon.utils.api import (
     md5,
     SIGN_REWARD_API,
 )
-from LittlePaimon.config import config
 
 from nonebot import logger
 
 from ..api.api import BBS_CAPATCH, BBS_CAPTCHA_VERIFY
+from ..config.config import config
 
 http = httpx.Client(timeout=20, transport=httpx.HTTPTransport(retries=10))
 
