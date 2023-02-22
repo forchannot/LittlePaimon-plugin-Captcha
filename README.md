@@ -31,11 +31,11 @@
 
 ## | 安装方法和注意事项
 #### |安装方法：
-1、将本项目直接clone或者下载压缩包到小派蒙根目录（也就是和`bot.py`同级目录下），在`bot.py`文件中找到`nonebot.load_plugin("LittlePaimon")`这一行，在这一行的下面添加`nonebot.load_plugin("LittlePaimon-plugin-Captcha")`即可
+方法1、将本项目直接clone或者下载压缩包到小派蒙根目录（也就是和`bot.py`同级目录下），在`bot.py`文件中找到`nonebot.load_plugin("LittlePaimon")`这一行，在这一行的下面添加`nonebot.load_plugin("LittlePaimon-plugin-Captcha")`即可
 
-2、放在`LittlePaimon\plugins\`内
+方法2、放在`LittlePaimon\plugins\`内
 
-3、**请注意！**不要直接将本项目放在src/plugins内，否则会导致启动报错！
+***请注意***，不要直接将本项目放在src/plugins内，否则会导致启动报错！
 
 #### |❗注意事项：
 **由于本项目的命令和小派蒙本身的命令相同，有如下两种解决方式：**
