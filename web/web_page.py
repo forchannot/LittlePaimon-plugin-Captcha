@@ -1,4 +1,4 @@
-from amis import Form, LevelEnum, InputText, Divider, InputText, Alert, Html, InputTime
+from amis import Form, LevelEnum, InputText, Divider, InputText, Alert, Html, InputTime, InputTimeRange, InputNumber
 from amis import PageSchema, Page, Switch, Remark, InputTag, Action
 
 from LittlePaimon.web.pages import admin_app
@@ -65,36 +65,63 @@ coding_form = Form(
         ),
         Divider(),
         Switch(
-            label='验证米游社签到开关',
-            name='米游社自动签到开关',
-            value='${米游社自动签到开关}',
+            label='米游社验证自动签到开关',
+            name='米游社验证自动签到开关',
+            value='${米游社验证自动签到开关}',
             onText='开启',
             offText='关闭'
         ),
         InputTime(
-            label='验证米游社自动签到开始时间',
-            name='米游社签到开始时间',
-            value='${米游社签到开始时间}',
+            label='米游社验证签到开始时间',
+            name='米游社验证签到开始时间',
+            value='${米游社验证签到开始时间}',
             labelRemark=Remark(shape='circle', content='会在每天这个时间点进行米游社自动签到任务，修改后重启生效'),
             inputFormat='HH时mm分',
             format='HH:mm'
         ),
         Divider(),
         Switch(
-            label='验证米游币自动获取开关',
-            name='米游币自动获取开关',
-            value='${米游币自动获取开关}',
+            label='米游币验证自动获取开关',
+            name='米游币验证自动获取开关',
+            value='${米游币验证自动获取开关}',
             onText='开启',
             offText='关闭'
         ),
         InputTime(
-            label='验证米游币自动获取开始时间',
-            name='米游币开始执行时间',
-            value='${米游币开始执行时间}',
+            label='米游币验证开始执行时间',
+            name='米游币验证开始执行时间',
+            value='${米游币验证开始执行时间}',
             labelRemark=Remark(shape='circle', content='会在每天这个时间点进行米游币自动获取任务，修改后重启生效'),
             inputFormat='HH时mm分',
             format='HH:mm'
         ),
+        Divider(),
+        Switch(
+            label='实时便签验证检查开关',
+            name='实时便签验证检查开关',
+            value='${实时便签验证检查开关}',
+            onText='开启',
+            offText='关闭'
+        ),
+        InputTimeRange(
+            label='实时便签验证停止检查时间段',
+            name='实时便签验证停止检查时间段',
+            value='${实时便签验证停止检查时间段}',
+            labelRemark=Remark(shape='circle',
+                               content='在这段时间(例如深夜)不进行实时便签检查，注意开始时间不要晚于结束时间，不然会有问题'),
+            timeFormat='HH',
+            format='HH',
+            inputFormat='HH时'
+        ),
+        InputNumber(
+            label='实时便签验证检查间隔',
+            name='实时便签验证检查间隔',
+            value='${实时便签验证检查间隔}',
+            labelRemark=Remark(shape='circle', content='每多少分钟检查进行一次实时便签，推荐不快于8分钟，修改后重启生效'),
+            displayMode='enhance',
+            suffix='分钟',
+            min=1,
+        )
     ],
     actions=action_button,
 )

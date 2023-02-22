@@ -1,25 +1,27 @@
 from typing import Union
 
-from .config.config import config
+from .handle.ssbq_handler import handle_ssbq, SubList, get_subs
 from .handle.coin_handle import mhy_bbs_coin, bbs_auto_coin
 from .handle.sign_handle import mhy_bbs_sign, bbs_auto_sign
+from .config.config import config
 from .web import web_api, web_page
 
-from LittlePaimon.database import MihoyoBBSSub, PrivateCookie
+from LittlePaimon.database import MihoyoBBSSub, PrivateCookie, DailyNoteSub
 from LittlePaimon.utils import logger
-from LittlePaimon.utils.message import CommandUID, CommandSwitch
+from LittlePaimon.utils.message import CommandPlayer, CommandUID, CommandSwitch
 
 from nonebot import on_command, Bot
-from nonebot.adapters.onebot.v11 import GroupMessageEvent, PrivateMessageEvent
+from nonebot.typing import T_State
+from nonebot.adapters.onebot.v11 import Message, GroupMessageEvent, PrivateMessageEvent
 from nonebot.permission import SUPERUSER
 from nonebot.plugin import PluginMetadata
 from nonebot.rule import to_me
 
 
 __plugin_meta__ = PluginMetadata(
-    name="原神签到验证",
-    description="原神签到验证",
-    usage="原神签到验证",
+    name="加强小派蒙验证",
+    description="为签到，体力提供验证",
+    usage="加强小派蒙验证",
     extra={
         "author": "forchannot",
         "version": "1.0",
@@ -53,7 +55,6 @@ all_sign = on_command(
         "pm_priority": 3,
     },
 )
-
 get_coin = on_command(
     "myb获取",
     aliases={"米游币获取", "myb自动获取", "米游币自动获取", "米游币任务"},
@@ -66,7 +67,6 @@ get_coin = on_command(
         "pm_priority": 2,
     },
 )
-
 all_coin = on_command(
     "myb全部重做",
     priority=8,
@@ -80,9 +80,33 @@ all_coin = on_command(
         "pm_priority": 4,
     },
 )
-
+ssbq = on_command(
+    "ssbq",
+    aliases={"实时便笺", "实时便签", "当前树脂"},
+    priority=9,
+    block=True,
+    state={
+        "pm_name": "ssbq",
+        "pm_description": "*查看原神实时便笺(树脂情况)",
+        "pm_usage": "ssbq(uid)",
+        "pm_priority": 1,
+    },
+)
+ssbq_sub = on_command(
+    "ssbq提醒",
+    aliases={"实时便笺提醒", "实时便签提醒", "当前树脂提醒"},
+    priority=9,
+    block=True,
+    state={
+        "pm_name": "ssbq提醒",
+        "pm_description": "*开启|关闭ssbq提醒，可订阅树脂以及尘歌壶钱币提醒",
+        "pm_usage": "ssbq提醒<开|关>[树脂|钱币]",
+        "pm_priority": 1,
+    },
+)
 signing_list = []
 coin_getting_list = []
+ssbq_list = []
 
 
 @sign.handle()
@@ -228,3 +252,69 @@ async def _(event: Union[GroupMessageEvent, PrivateMessageEvent]):
         await bbs_auto_coin()
     else:
         await all_coin.send("没有开启米游币自动获取")
+
+
+@ssbq.handle()
+async def _(
+    bot: Bot,
+    event: Union[GroupMessageEvent, PrivateMessageEvent],
+    state: T_State,
+    players=CommandPlayer(),
+):
+    if state.get("clear_msg"):
+        await ssbq.finish("开启提醒请用[ssbq提醒开启|关闭 提醒内容+数量]指令，比如[ssbq提醒开启树脂150]")
+    for player in players:
+        if f"{event.user_id}-{player.uid}" in ssbq_list:
+            await ssbq.finish("你已经在查询体力任务中，请勿重复发送", at_sender=True)
+        else:
+            logger.info("原神实时便签", "开始执行查询")
+            ssbq_list.append(f"{event.user_id}-{player.uid}")
+            judgment = isinstance(event, GroupMessageEvent)
+            if judgment and event.group_id in config.group_allow_list:
+                result = Message()
+                result += await handle_ssbq(player, True)
+                ssbq_list.remove(f"{event.user_id}-{player.uid}")
+            elif event.user_id in config.member_allow_list:
+                result = Message()
+                result += await handle_ssbq(player, True)
+                ssbq_list.remove(f"{event.user_id}-{player.uid}")
+            else:
+                result = Message()
+                result += await handle_ssbq(player, False)
+                ssbq_list.remove(f"{event.user_id}-{player.uid}")
+        await ssbq.finish(result, at_sender=True)
+
+
+@ssbq_sub.handle()
+async def _(
+    event: Union[GroupMessageEvent, PrivateMessageEvent],
+    uid=CommandUID(),
+    switch=CommandSwitch(),
+    subs=SubList(),
+):
+    sub_data = {
+        "user_id": event.user_id,
+        "uid": uid,
+        "remind_type": event.message_type,
+    }
+    if isinstance(event, GroupMessageEvent):
+        sub_data["group_id"] = event.group_id
+    if switch is None or switch:
+        await DailyNoteSub.update_or_create(**sub_data, defaults=subs)
+        logger.info("原神实时便笺", "", sub_data.update(subs), "添加提醒成功", True)
+        subs_info = await get_subs(**sub_data)
+        await ssbq_sub.finish(f"开启提醒成功，{subs_info}", at_sender=True)
+    else:
+        s = await DailyNoteSub.get_or_none(**sub_data)
+        if not s:
+            await ssbq_sub.finish("你在当前会话尚未开启任何订阅", at_sender=True)
+        else:
+            if "resin_num" in subs:
+                s.resin_num = None
+            if "coin_num" in subs:
+                s.coin_num = None
+            if s.resin_num is None and s.coin_num is None:
+                await s.delete()
+            else:
+                await s.save()
+            await ssbq_sub.finish("已关闭当前会话的对应提醒", at_sender=True)

@@ -21,7 +21,7 @@ from nonebot import get_bot, logger
 
 from ..config.config import config
 from ..utils.captcha import _HEADER, get_validate, get_sign_info, get_sign_list
-from ..utils.draw import SignResult, draw_result
+from ..utils.sign_draw import SignResult, draw_result
 
 http = httpx.Client(timeout=20, transport=httpx.HTTPTransport(retries=10))
 GEETEST_HEADER = {

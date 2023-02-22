@@ -7,13 +7,18 @@ PAIMON_CONFIG = Path() / "config" / "Captcha_config.yml"
 
 
 class ConfigModel(BaseModel):
-    auto_myb_enable: bool = Field(True, alias='米游币自动获取开关')
-    auto_myb_hour: int = Field(8, alias='米游币开始执行时间(小时)')
-    auto_myb_minute: int = Field(0, alias='米游币开始执行时间(分钟)')
+    auto_myb_enable: bool = Field(True, alias='米游币验证自动获取开关')
+    auto_myb_hour: int = Field(8, alias='米游币验证开始执行时间(小时)')
+    auto_myb_minute: int = Field(0, alias='米游币验证开始执行时间(分钟)')
 
-    auto_sign_enable: bool = Field(False, alias='米游社自动签到开关')
-    auto_sign_hour: int = Field(0, alias='米游社签到开始时间(小时)')
-    auto_sign_minute: int = Field(5, alias='米游社签到开始时间(分钟)')
+    auto_sign_enable: bool = Field(False, alias='米游社验证自动签到开关')
+    auto_sign_hour: int = Field(0, alias='米游社验证签到开始时间(小时)')
+    auto_sign_minute: int = Field(5, alias='米游社验证签到开始时间(分钟)')
+
+    ssbq_enable: bool = Field(True, alias='实时便签验证检查开关')
+    ssbq_begin: int = Field(0, alias='实时便签验证停止检查开始时间')
+    ssbq_end: int = Field(6, alias='实时便签验证停止检查结束时间')
+    ssbq_check: int = Field(16, alias='实时便签验证检查间隔')
 
     change_api: bool = Field(True, alias='打码平台')
     third_api: str = Field('', alias='第三方链接')

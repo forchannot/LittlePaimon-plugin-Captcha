@@ -14,7 +14,7 @@
   * [功能示例](#-功能示例)
   * [安装方法和注意事项](#-安装方法和注意事项)
       * [安装方法：](#安装方法)
-      * [注意事项：](#注意事项)
+      * [注意事项（重要！！！）：](#注意事项)
   * [配置文件](#-配置文件)
   * [鸣谢](#丨鸣谢)
   * [一些个人~~写~~（维护）的插件](#丨-其他插件)
@@ -31,20 +31,23 @@
 
 ## | 安装方法和注意事项
 #### |安装方法：
-1、将本项目直接clone或者下载压缩包到小派蒙根目录（也就是和`bot.py`同级目录下），在`bot.py`文件中找到`nonebot.load_plugin("LittlePaimon")`这一行，在这一行的下面添加`nonebot.load_plugin("LittlePaimon-plugin-Captcha")`即可
+方法1、将本项目直接clone或者下载压缩包到小派蒙根目录（也就是和`bot.py`同级目录下），在`bot.py`文件中找到`nonebot.load_plugin("LittlePaimon")`这一行，在这一行的下面添加`nonebot.load_plugin("LittlePaimon-plugin-Captcha")`即可
 
-2、放在`LittlePaimon\plugins\`内
+方法2、将本项目直接clone或者下载压缩包到`LittlePaimon\plugins\`内即可
 
-3、**请注意！**不要直接将本项目放在src/plugins内，否则会导致启动报错！
+***请注意***，不要直接将本项目放在src/plugins内，否则会导致启动报错！
 
 #### |❗注意事项：
 **由于本项目的命令和小派蒙本身的命令相同，有如下两种解决方式：**
 
-1、请自行修改命令，修改`__init__.py`文件中的`on_command`后的命令响应内容（即）插件命令为你自己喜欢的命令防止后续更新[LittlePaimon](https://github.com/CMHopeSunshine/LittlePaimon)冲突~~（我懒得改了）~~
+1、自行修改命令，修改`__init__.py`文件中的`on_command`后的命令响应内容（即）插件命令为你自己喜欢的命令防止后续更新[小派蒙](https://github.com/CMHopeSunshine/LittlePaimon)本体时冲突~~（我懒得改了）~~
 
-2、将`LittlePaimon/Plugins/Paimon_AutoBBS`的文件更名为`__Paimon_AutoBBS`使得nonebot不加载小派蒙本体的该插件
+2、将
+`LittlePaimon/Plugins/Paimon_AutoBBS`和`LittlePaimon/Plugins/Paimon_DailyNote`的文件夹分别更名为`__Paimon_AutoBBS`和`__Paimon_DailyNote`使得nonebot不加载小派蒙本体的该插件
 
-**ps:如果使用本方法，请在涉及到该文件夹下代码更新时将文件夹名改回来!**
+**强烈建议用方法1自己改命令！！！**
+
+**ps:如果使用本方法，请在涉及到这两个文件夹下有代码更新时将文件夹名改回来!**
 
 ## | ⚙️配置文件
 
@@ -53,21 +56,26 @@
 **tips**：如果你因为某些原因无法进入后台，可在config/Captcha_config.yml文件中自行设置，但需要注意格式需要符合**yml文件标准**，下面给出了一份参考格式：
 
 
-	米游社签到开关: true
-	米游社签到开始时间(小时): 0
-	米游社签到开始时间(分钟): 40
-	米游币获取开关: true
-	米游币开始执行时间(小时): 6
-	米游币开始执行时间(分钟): 0
+	米游币验证自动获取开关: true
+	米游币验证开始执行时间(小时): 16
+	米游币验证开始执行时间(分钟): 0
+	米游社验证自动签到开关: true
+	米游社验证签到开始时间(小时): 0
+	米游社验证签到开始时间(分钟): 5
+	实时便签验证检查开关: true
+	实时便签验证停止检查开始时间: 8
+	实时便签验证停止检查结束时间: 13
+	实时便签验证检查间隔: 14
 	打码平台: false
-	第三方链接: http://xxx/geetest?token=xxx&
-	人人打码appkey: 123456
+	第三方链接: '123'
+	人人打码appkey: '44'
 	开启验证的成员列表:
-	- 223123
-	- 123456
+	- 1231
+	- 414
 	开启验证的群列表:
-	- 123131
-	- 111333
+	- 123143
+	- 1
+	- 2
 
 
 ## 丨💸鸣谢
