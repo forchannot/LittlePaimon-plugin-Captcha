@@ -173,10 +173,10 @@ def other_api(gt: str, challenge: str, referer: str):
         if config.rrocr_key:
             logger.info("[第三方]失败,开始尝试人人")
             validate, challenge = rrocr(gt, challenge, referer)
-            return validate, challenge  # 失败返回'j' 成功返回validate
+            return validate, challenge
         else:
             validate = "j"
-            challenge = "j"
+            challenge = "j"  # 失败返回'j' 成功返回validate
             return validate, challenge
 
 

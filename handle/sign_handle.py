@@ -203,7 +203,7 @@ async def bbs_auto_sign():
     sign_result_group = defaultdict(list)
     sign_result_private = defaultdict(list)
     for sub in subs:
-        if sub.user_id in config.member_allow_list:
+        if sub.user_id in config.member_allow_list or sub.group_id in config.group_allow_list:
             result, msg = await mhy_bbs_sign(True, str(sub.user_id), sub.uid)  # 执行验证签到
         else:
             result, msg = await mhy_bbs_sign(False, str(sub.user_id), sub.uid)  # 执行普通签到

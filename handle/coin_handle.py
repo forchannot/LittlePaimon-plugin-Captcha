@@ -327,7 +327,7 @@ async def bbs_auto_coin():
     coin_result_group = defaultdict(list)
     coin_result_private = defaultdict(list)
     for sub in subs:
-        if sub.user_id in config.member_allow_list:
+        if sub.user_id in config.member_allow_list or sub.group_id in config.group_allow_list:
             result = await mhy_bbs_coin(str(sub.user_id), sub.uid, True)
         else:
             result = await mhy_bbs_coin(str(sub.user_id), sub.uid, False)
