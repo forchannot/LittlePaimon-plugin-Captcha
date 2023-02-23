@@ -1,5 +1,8 @@
 from typing import Union
 
+from nonebot.params import CommandArg
+
+from .utils.captcha import gain_num
 from .handle.ssbq_handler import handle_ssbq, SubList, get_subs
 from .handle.coin_handle import mhy_bbs_coin, bbs_auto_coin
 from .handle.sign_handle import mhy_bbs_sign, bbs_auto_sign
@@ -104,6 +107,7 @@ ssbq_sub = on_command(
         "pm_priority": 1,
     },
 )
+get_num = on_command("查询积分", aliases={"查询剩余", "查询剩余积分"}, permission=SUPERUSER)
 signing_list = []
 coin_getting_list = []
 ssbq_list = []
@@ -318,3 +322,26 @@ async def _(
             else:
                 await s.save()
             await ssbq_sub.finish("已关闭当前会话的对应提醒", at_sender=True)
+
+
+@get_num.handle()
+async def _(event: PrivateMessageEvent, arg: Message = CommandArg()):
+    url_to_key = {
+        "人人": "rr",
+        "rr": "rr",
+        "renren": "rr",
+        "路路": "ll",
+        "小灰灰": "ll",
+        "ll": "ll",
+    }
+    url_choice = arg.extract_plain_text().strip()
+    if url_choice:
+        key = url_to_key.get(url_choice, "other")
+        if key:
+            result = gain_num(key)
+            if result:
+                await get_num.finish(result, at_sender=True)
+            else:
+                await get_num.finish("请求失败，请检查 key 是否失效或填写错误", at_sender=True)
+    else:
+        await get_num.finish("请在后面加上你要查询积分的平台")

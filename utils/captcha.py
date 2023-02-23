@@ -1,5 +1,6 @@
 import copy
 import random
+import re
 import string
 import time
 from typing import Union
@@ -208,3 +209,25 @@ def rrocr(gt: str, challenge: str, referer: str):
         validate = "j"
         challenge = "j"
         return validate, challenge  # 失败返回'j' 成功返回validate
+
+
+def gain_num(choice):
+    if choice == "rr" and config.rrocr_key:
+        data = http.get(
+            f"http://api.rrocr.com/api/integral.html?appkey={config.rrocr_key}"
+        ).json()
+        if data["status"] == 0:
+            key_num = data["integral"]
+            return f"你剩余积分为{key_num}"
+    elif choice == "ll" and config.third_api:
+        url = config.third_api
+        match = re.search(r"token=([^&]+)", url)
+        if match:
+            token = match.group(1)
+            data = http.get(f"http://api.fuckmys.tk/token?token={token}").json()
+            if data["info"] == "success":
+                key_num = data["times"]
+                return f"你已经使用了为{key_num}次，剩余{2333-key_num}次"
+    elif choice == "other":
+        return "暂不支持查询其他平台剩余次数，请前往（https://github.com/forchannot/LittlePaimon-plugin-Captchapr）pr或者自行修改源码"
+    return None
