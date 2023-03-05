@@ -30,7 +30,7 @@ class MihoyoBBSCoin:
     米游币获取
     """
 
-    def __init__(self, sign_allow: bool, cookies, uid, user_id):
+    def __init__(self, coin_allow: bool, cookies, uid, user_id):
         self.headers: dict = {
             "DS": get_ds2(web=False),
             "cookie": cookies,
@@ -62,7 +62,7 @@ class MihoyoBBSCoin:
         self.state: str = ""
         self.uid = uid
         self.user_id = user_id
-        self.sign_allow: bool = sign_allow
+        self.coin_allow: bool = coin_allow
 
     async def run(self) -> Tuple[bool, str]:
         """
@@ -73,14 +73,17 @@ class MihoyoBBSCoin:
         await self.get_tasks_list()
         tasks_list = [self.signing, self.read_posts, self.like_posts, self.share_post]
         result = "米游币获取结果：\n"
+        done_msg = f"今日米游币已全部获取,获取数量为{self.total_coins}"
         run_time = 0
-        while self.available_coins != 0 and run_time < 3:
-            for task in tasks_list:
-                if not self.is_valid:
-                    return False, self.state
-                msg = await task()
-                result += msg + "\n"
-        return True, result
+        if self.available_coins == 0:
+            return True, result+done_msg
+        else:
+            while self.available_coins != 0 and run_time < 3:
+                for task in tasks_list:
+                    if not self.is_valid:
+                        return False, self.state
+                    msg = await task()
+                    result += msg + "\n"
 
     async def get_tasks_list(self):
         """
@@ -266,7 +269,7 @@ class MihoyoBBSCoin:
         return "分享帖子：完成！"
 
 
-async def mhy_bbs_coin(user_id: str, uid: str, coin_allow: bool) -> str:
+async def mhy_bbs_coin(coin_allow: bool, user_id: str, uid: str) -> str:
     """
     执行米游币获取任务
     :param user_id: 用户id
@@ -282,10 +285,7 @@ async def mhy_bbs_coin(user_id: str, uid: str, coin_allow: bool) -> str:
         user_id=user_id, defaults={"uid": uid, "last_time": datetime.datetime.now()}
     )
     logger.info("米游币自动获取", "➤执行", {"用户": user_id, "UID": uid, "的米游币获取": "......"})
-    if coin_allow:
-        get_coin_task = MihoyoBBSCoin(True, cookie.stoken, user_id=user_id, uid=uid)
-    else:
-        get_coin_task = MihoyoBBSCoin(False, cookie.stoken, user_id=user_id, uid=uid)
+    get_coin_task = MihoyoBBSCoin(coin_allow, cookie.stoken, user_id=user_id, uid=uid)
     result, msg = await get_coin_task.run()
     return msg if result else f"UID{uid}{msg}"
 
@@ -321,9 +321,9 @@ async def bbs_auto_coin():
             sub.user_id in config.member_allow_list
             or sub.group_id in config.group_allow_list
         ):
-            result = await mhy_bbs_coin(str(sub.user_id), sub.uid, True)
+            result = await mhy_bbs_coin(True, str(sub.user_id), sub.uid)
         else:
-            result = await mhy_bbs_coin(str(sub.user_id), sub.uid, False)
+            result = await mhy_bbs_coin(False, str(sub.user_id), sub.uid)
         if sub.user_id != sub.group_id:
             coin_result_group[sub.group_id].append(
                 {

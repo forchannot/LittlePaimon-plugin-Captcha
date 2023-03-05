@@ -202,13 +202,13 @@ async def _(
             judgment = isinstance(event, GroupMessageEvent)
             if judgment and event.group_id in config.group_allow_list:
                 logger.info(f"{event.group_id}在白名单内,开始执行验证签到")
-                result = await mhy_bbs_coin(str(event.user_id), uid, True)
+                result = await mhy_bbs_coin(True, str(event.user_id), uid)
             elif event.user_id in config.member_allow_list:
                 logger.info(f"{event.user_id}在白名单内,开始执行验证签到")
-                result = await mhy_bbs_coin(str(event.user_id), uid, True)
+                result = await mhy_bbs_coin(True, str(event.user_id), uid)
             else:
                 logger.info(f"{event.user_id}不在白名单内,开始执行普通签到")
-                result = await mhy_bbs_coin(str(event.user_id), uid, False)
+                result = await mhy_bbs_coin(False, str(event.user_id), uid)
             coin_getting_list.remove(f"{event.user_id}-{uid}")
             await get_coin.finish(result, at_sender=True)
     else:
