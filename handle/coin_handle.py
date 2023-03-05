@@ -73,7 +73,7 @@ class MihoyoBBSCoin:
         await self.get_tasks_list()
         tasks_list = [self.signing, self.read_posts, self.like_posts, self.share_post]
         result = "米游币获取结果：\n"
-        done_msg = f"今日米游币已全部获取,获取数量为{self.total_coins}"
+        done_msg = f"今日米游币已全部获取,获取数量为{self.received_coins}"
         run_time = 0
         if self.available_coins == 0:
             return True, result+done_msg
@@ -284,7 +284,7 @@ async def mhy_bbs_coin(coin_allow: bool, user_id: str, uid: str) -> str:
     await LastQuery.update_or_create(
         user_id=user_id, defaults={"uid": uid, "last_time": datetime.datetime.now()}
     )
-    logger.info("米游币自动获取", "➤执行", {"用户": user_id, "UID": uid, "的米游币获取": "......"})
+    logger.info("米游币自动获取", "➤执行", {"用户": user_id, "UID": uid, "的米游币获取中": "......"})
     get_coin_task = MihoyoBBSCoin(coin_allow, cookie.stoken, user_id=user_id, uid=uid)
     result, msg = await get_coin_task.run()
     return msg if result else f"UID{uid}{msg}"
