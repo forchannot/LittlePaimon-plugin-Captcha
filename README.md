@@ -47,7 +47,7 @@
 
 **强烈建议用方法1自己改命令！！！**
 
-**ps:如果使用本方法，请在涉及到这两个文件夹下有代码更新时将文件夹名改回来!**
+**ps:如果使用方法2，请在涉及到这两个文件夹下有代码更新时将文件夹名改回来!**
 
 ## | ⚙️配置文件
 
@@ -88,6 +88,9 @@
 
 
 
-## 丨 其他插件
+## 丨 其他插件(~~推销~~)
 
 [原神模拟圣遗物](https://github.com/forchannot/nonebot_plugin_artifact)
+
+[定时更改群名片](https://github.com/forchannot/nonebot_plugin_rename)
+

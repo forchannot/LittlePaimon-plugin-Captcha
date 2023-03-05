@@ -17,7 +17,7 @@ coding_form = Form(
             name="打码平台",
             value="${打码平台}",
             labelRemark=Remark(
-                shape="circle", content="选择打码平台,如果选择三方并且填写了人人key，会在失败后尝试使用人人继续"
+                shape="circle", content="选择打码平台,如果选择三方并且填写了人人key，会在失败后尝试使用人人继续(可能没用)"
             ),
             onText="人人",
             offText="三方",
@@ -26,7 +26,7 @@ coding_form = Form(
             label="第三方请求链接",
             name="第三方链接",
             value="${第三方链接}",
-            placeholder="输入第三方平台的打码请求链接(需包含token值)",
+            placeholder="输入第三方平台的打码请求链接(需包含token值),以&结束",
             labelRemark=Remark(
                 shape="circle",
                 content="例如：http(s)://abc.bb?token=xxx&,或者http("
@@ -100,6 +100,7 @@ coding_form = Form(
             label='实时便签验证检查开关',
             name='实时便签验证检查开关',
             value='${实时便签验证检查开关}',
+            labelRemark=Remark(shape='circle', content='开启检查实时便签,用于体力溢出检测,不建议开启'),
             onText='开启',
             offText='关闭'
         ),
