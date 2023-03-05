@@ -73,11 +73,13 @@ class MihoyoBBSCoin:
         await self.get_tasks_list()
         tasks_list = [self.signing, self.read_posts, self.like_posts, self.share_post]
         result = "米游币获取结果：\n"
-        for task in tasks_list:
-            if not self.is_valid:
-                return False, self.state
-            msg = await task()
-            result += msg + "\n"
+        run_time = 0
+        while self.available_coins != 0 and run_time < 3:
+            for task in tasks_list:
+                if not self.is_valid:
+                    return False, self.state
+                msg = await task()
+                result += msg + "\n"
         return True, result
 
     async def get_tasks_list(self):
@@ -155,49 +157,37 @@ class MihoyoBBSCoin:
         """
         讨论区签到
         """
-        global data
         if self.Task_do["bbs_Sign"]:
             return "讨论区签到：已经完成过了~"
-        header = {}
-        header.update(self.headers)
-        w = 0
-        text = 0
+        header = self.headers.copy()
+        challenge = None
         for i in self.mihoyo_bbs_List:
-            while w == 0 and text < 3:
-                header["DS"] = get_ds("", {"gids": i["id"]}, True)
-                req = await aiorequests.post(
-                    url=BBS_SIGN_URL, json={"gids": i["id"]}, headers=header
-                )
-                data = req.json()
-                if data["retcode"] != 0:
-                    if data["retcode"] == 1034:
-                        if self.sign_allow:
-                            logger.warning(f"社区签到触发验证码,重试第{w+1}次")
-                            text += 1
-                            challenge = await get_pass_challenge(self.uid, self.user_id)
-                            if challenge is not None:
-                                header["x-rpc-challenge"] = challenge
-                        else:
-                            logger.warning(f"社区签到触发验证码,重试第{w + 1}次")
-                            text += 1
-                    if data["retcode"] != 1034:
-                        self.is_valid = False
-                        text += 1
-                    self.state = (
-                        "Cookie已失效"
-                        if data["retcode"] in [-100, 10001]
-                        else f"出错了:{data['retcode']} {data['message']}"
-                        if data["retcode"] != 1034
-                        else "正在尝试过验证码"
-                    )
-                    logger.info("米游币自动获取", f"➤➤<r>{self.state}</r>")
-                    if data["retcode"] != 1034 and text == 3:
-                        return f"讨论区签到：{self.state}"
-                    if data["retcode"] == 1034 and text == 3:
-                        return "讨论区签到：失败，遇到验证码"
+            header["DS"] = get_ds("", {"gids": i["id"]}, True)
+            req = await aiorequests.post(
+                url=BBS_SIGN_URL, json={"gids": i["id"]}, headers=header
+            )
+            data = req.json()
+            if data["retcode"] != 0:
+                if data["retcode"] == 1034:
+                    logger.info("社区签到触发验证码")
+                    challenge = await get_pass_challenge(self.uid, self.user_id)
+                    if challenge is not None:
+                        header["x-rpc-challenge"] = challenge
+                        self.state = "已获取验证码"
+                    else:
+                        self.state = "遇验证码阻拦,无法绕过"
+                elif data["retcode"] in [-100, 10001]:
+                    self.is_valid = False
+                    self.state = "Cookie已失效"
                 else:
-                    w = 1
-                await asyncio.sleep(random.randint(15, 30))
+                    self.is_valid = False
+                    self.state = f"出错了:{data['retcode']} {data['message']}"
+                logger.info("米游币自动获取", f"➤➤<r>{self.state}</r>")
+                return f"讨论区签到：{self.state}"
+            if challenge is not None:
+                challenge = None
+                header.pop("x-rpc-challenge")
+            await asyncio.sleep(random.randint(15, 30))
         logger.info("米游币自动获取", "➤➤讨论区签到<g>完成</g>")
         return "讨论区签到：完成！"
 
@@ -276,7 +266,7 @@ class MihoyoBBSCoin:
         return "分享帖子：完成！"
 
 
-async def mhy_bbs_coin(user_id: str, uid: str, sign_allow: bool) -> str:
+async def mhy_bbs_coin(user_id: str, uid: str, coin_allow: bool) -> str:
     """
     执行米游币获取任务
     :param user_id: 用户id
@@ -292,7 +282,7 @@ async def mhy_bbs_coin(user_id: str, uid: str, sign_allow: bool) -> str:
         user_id=user_id, defaults={"uid": uid, "last_time": datetime.datetime.now()}
     )
     logger.info("米游币自动获取", "➤执行", {"用户": user_id, "UID": uid, "的米游币获取": "......"})
-    if sign_allow:
+    if coin_allow:
         get_coin_task = MihoyoBBSCoin(True, cookie.stoken, user_id=user_id, uid=uid)
     else:
         get_coin_task = MihoyoBBSCoin(False, cookie.stoken, user_id=user_id, uid=uid)
@@ -327,7 +317,10 @@ async def bbs_auto_coin():
     coin_result_group = defaultdict(list)
     coin_result_private = defaultdict(list)
     for sub in subs:
-        if sub.user_id in config.member_allow_list or sub.group_id in config.group_allow_list:
+        if (
+            sub.user_id in config.member_allow_list
+            or sub.group_id in config.group_allow_list
+        ):
             result = await mhy_bbs_coin(str(sub.user_id), sub.uid, True)
         else:
             result = await mhy_bbs_coin(str(sub.user_id), sub.uid, False)
@@ -336,14 +329,18 @@ async def bbs_auto_coin():
                 {
                     "user_id": sub.user_id,
                     "uid": sub.uid,
-                    "result": "出错" not in result and "Cookie" not in result,
+                    "result": "出错" not in result
+                    and "Cookie" not in result
+                    and "无法绕过" not in result,
                 }
             )
         else:
             coin_result_private[sub.user_id].append(
                 {
                     "uid": sub.uid,
-                    "result": "出错" not in result and "Cookie" not in result,
+                    "result": "出错" not in result
+                    and "Cookie" not in result
+                    and "无法绕过" not in result,
                     "msg": result,
                 }
             )
@@ -357,7 +354,8 @@ async def bbs_auto_coin():
             fails = "\n".join(
                 result["uid"] for result in result_list if not result["result"]
             )
-            msg = f"本群米游币自动获取共{result_num}个任务，其中成功{result_num - result_fail}个，失败{result_fail}个，失败的UID列表：\n{fails}"
+            msg = f"本群米游币自动获取共{result_num}个任务，其中成功{result_num - result_fail}个，失败{result_fail}个，失败的UID列表：\n{fails}\n" \
+                  f"请手动完成获取,可能是讨论区签到验证码无法绕过或ck失效"
         else:
             msg = f"本群米游币自动获取共{result_num}个任务，已全部完成"
         try:
