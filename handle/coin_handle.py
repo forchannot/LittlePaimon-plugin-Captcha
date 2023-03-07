@@ -163,7 +163,9 @@ class MihoyoBBSCoin:
         sts = 0
         num = 0
         for i in self.mihoyo_bbs_List:
-            while sts == 1 or num == 3:
+            while True:
+                if sts == 1 or num == 3:
+                    break
                 header["DS"] = get_ds("", {"gids": i["id"]}, True)
                 req = await aiorequests.post(
                     url=BBS_SIGN_URL, json={"gids": i["id"]}, headers=header
@@ -172,11 +174,21 @@ class MihoyoBBSCoin:
                 sts = 1
                 if data["retcode"] != 0:
                     if data["retcode"] == 1034:
-                        logger.info("社区签到触发验证码")
+                        logger.info(f"社区签到触发验证码,第{num+1}次尝试绕过")
                         challenge = await get_pass_challenge(self.uid, self.user_id)
                         if challenge is not None:
                             header["x-rpc-challenge"] = challenge
-                            self.state = "过码成功，完成！"
+                            logger.info("已获取验证码,正在重新请求")
+                            req2 = await aiorequests.post(
+                                url=BBS_SIGN_URL, json={"gids": i["id"]}, headers=header
+                            )
+                            data = req2.json()
+                            if data["retcode"] == 1034:
+                                self.state = "过码失败"
+                                num += 1
+                                sts = 0
+                            else:
+                                self.state = "过码成功,完成!"
                         else:
                             self.state = "遇验证码阻拦,无法绕过"
                             num += 1
@@ -188,10 +200,14 @@ class MihoyoBBSCoin:
                         self.is_valid = False
                         self.state = f"出错了:{data['retcode']} {data['message']}"
                     logger.info("米游币自动获取", f"➤➤<r>{self.state}</r>")
+                else:
+                    self.state = "完成！"
                 if challenge is not None:
                     challenge = None
                     header.pop("x-rpc-challenge")
-                await asyncio.sleep(random.randint(15, 30))
+                delay = random.randint(15, 30)
+                logger.info("米游币自动获取", f"➤➤<g>等待{delay}秒后进行下一步操作</g>")
+                await asyncio.sleep(delay)
         logger.info("米游币自动获取", f"➤➤讨论区签到<g>{self.state}</g>")
         return f"讨论区签到：{self.state}"
 

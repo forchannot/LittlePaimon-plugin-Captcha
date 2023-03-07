@@ -171,14 +171,9 @@ def other_api(gt: str, challenge: str, referer: str):
         challenge = data["data"]["challenge"]
         return validate, challenge
     else:
-        if config.rrocr_key:
-            logger.info("[第三方]失败,开始尝试人人")
-            validate, challenge = rrocr(gt, challenge, referer)
-            return validate, challenge
-        else:
-            validate = "j"
-            challenge = "j"  # 失败返回'j' 成功返回validate
-            return validate, challenge
+        validate = "j"
+        challenge = "j"  # 失败返回'j' 成功返回validate
+        return validate, challenge
 
 
 def rrocr(gt: str, challenge: str, referer: str):
@@ -200,12 +195,12 @@ def rrocr(gt: str, challenge: str, referer: str):
     )
     data = response.json()
     if "data" in data and "validate" in data["data"]:
-        logger.info(data["msg"])
+        # logger.info(data["msg"])
         validate = data["data"]["validate"]
         challenge = data["data"]["challenge"]
         return validate, challenge
     else:
-        logger.info(data["msg"])  # 打码失败输出错误信息,返回'j'
+        # logger.info(data["msg"])  # 打码失败输出错误信息,返回'j'
         validate = "j"
         challenge = "j"
         return validate, challenge  # 失败返回'j' 成功返回validate

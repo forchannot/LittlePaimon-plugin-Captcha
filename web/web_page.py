@@ -17,7 +17,7 @@ coding_form = Form(
             name="打码平台",
             value="${打码平台}",
             labelRemark=Remark(
-                shape="circle", content="选择打码平台,如果选择三方并且填写了人人key，会在失败后尝试使用人人继续(可能没用)"
+                shape="circle", content="选择打码平台"
             ),
             onText="人人",
             offText="三方",
