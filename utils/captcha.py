@@ -108,7 +108,7 @@ def get_ds2(web: bool) -> str:
     return f"{i},{r},{c}"
 
 
-async def get_pass_challenge(uid: str, user_id: str):
+async def get_pass_challenge(uid: str, user_id: str, way: bool):
     cookie_info = await get_cookie(user_id, uid, True, True)
     headers = {
         "DS": get_ds2(web=False),
@@ -135,6 +135,7 @@ async def get_pass_challenge(uid: str, user_id: str):
         data["data"]["challenge"],
         "https://webstatic.mihoyo.com/bbs/event/signin-ys/index.html?bbs_auth_required=true&act_id"
         "=e202009291139501&utm_source=bbs&utm_medium=mys&utm_campaign=icon",
+        way
     )
     if validate != "j":
         check_req = http.post(
@@ -153,16 +154,16 @@ async def get_pass_challenge(uid: str, user_id: str):
     return None
 
 
-def get_validate(gt: str, challenge: str, referer: str):
+def get_validate(gt: str, challenge: str, referer: str, choose: bool):
     """validate,challenge"""
-    if config.change_api:
+    if choose:
         validate, challenge = rrocr(gt, challenge, referer)
     else:
-        validate, challenge = other_api(gt, challenge, referer)
+        validate, challenge = other_api(gt, challenge)
     return validate, challenge  # 失败返回'j' 成功返回validate
 
 
-def other_api(gt: str, challenge: str, referer: str):
+def other_api(gt: str, challenge: str):
     response = http.get(config.third_api + f"gt={gt}&challenge={challenge}", timeout=60)
     data = response.json()
     if "data" in data and "validate" in data["data"]:

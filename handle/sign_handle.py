@@ -117,7 +117,7 @@ async def mhy_bbs_sign(
                 if (config.rrocr_key or config.third_api) and sign_allow:
                     gt = sign_data["data"]["gt"]
                     challenge = sign_data["data"]["challenge"]
-                    validate, challeng = get_validate(gt, challenge, SIGN_ACTION_API)
+                    validate, challeng = get_validate(gt, challenge, SIGN_ACTION_API, config.qd_ch)
                     if validate != "j" and challeng != "j":
                         delay = random.randint(5, 15)
                         Header["x-rpc-challenge"] = challeng

@@ -19,7 +19,6 @@ from LittlePaimon.utils.api import get_mihoyo_private_data, DAILY_NOTE_API
 from LittlePaimon.utils.requests import aiorequests
 
 
-
 def SubList() -> dict:
     async def _sub(msg: Message = CommandArg()):
         msg = msg.extract_plain_text().strip()
@@ -70,7 +69,7 @@ async def handle_ssbq(player: Player, sign_allow: bool):
                 "获取数据失败，状态码为1034，疑似验证码",
                 False,
             )
-            challenge = await get_pass_challenge(player.uid, player.user_id)
+            challenge = await get_pass_challenge(player.uid, player.user_id, config.ssbq_ch)
             if challenge is not None:
                 server_id = "cn_qd01" if player.uid[0] == "5" else "cn_gf01"
                 cookie_info = await PrivateCookie.get_or_none(

@@ -13,11 +13,31 @@ coding_form = Form(
     api='post:/LittlePaimon/api/abyss_config',
     body=[
         Switch(
-            label="打码平台选择",
-            name="打码平台",
-            value="${打码平台}",
+            label="ssbq打码平台选择",
+            name="ssbq打码平台",
+            value="${ssbq打码平台}",
             labelRemark=Remark(
-                shape="circle", content="选择打码平台"
+                shape="circle", content="选择ssbq的打码平台"
+            ),
+            onText="人人",
+            offText="三方",
+        ),
+        Switch(
+            label="米游社签到打码平台选择",
+            name="米游社签到打码平台",
+            value="${米游社签到打码平台}",
+            labelRemark=Remark(
+                shape="circle", content="选择米游社签到的打码平台"
+            ),
+            onText="人人",
+            offText="三方",
+        ),
+        Switch(
+            label="米游币打码平台选择",
+            name="米游币获取打码平台",
+            value="${米游币获取打码平台}",
+            labelRemark=Remark(
+                shape="circle", content="选择米游币获取的打码平台"
             ),
             onText="人人",
             offText="三方",

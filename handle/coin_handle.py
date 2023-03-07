@@ -175,7 +175,7 @@ class MihoyoBBSCoin:
                 if data["retcode"] != 0:
                     if data["retcode"] == 1034:
                         logger.info(f"社区签到触发验证码,第{num+1}次尝试绕过")
-                        challenge = await get_pass_challenge(self.uid, self.user_id)
+                        challenge = await get_pass_challenge(self.uid, self.user_id, config.myb_ch)
                         if challenge is not None:
                             header["x-rpc-challenge"] = challenge
                             logger.info("已获取验证码,正在重新请求")
