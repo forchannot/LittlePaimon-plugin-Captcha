@@ -9,8 +9,8 @@ from nonebot import get_bot
 from nonebot.adapters.onebot.v11 import Message
 from nonebot.params import CommandArg, Depends
 
-from ..utils.ssbq_draw import draw_daily_note_card
-from ..utils.captcha import get_pass_challenge, mihoyo_headers
+from ..draw.ssbq_draw import draw_daily_note_card
+from ..captcha.captcha import get_pass_challenge, mihoyo_headers
 from ..config.config import config
 
 from LittlePaimon.database import DailyNoteSub, Player, LastQuery, PrivateCookie

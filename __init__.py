@@ -2,7 +2,7 @@ from typing import Union
 
 from nonebot.params import CommandArg
 
-from .utils.captcha import gain_num
+from .captcha.captcha import gain_num
 from .handle.ssbq_handler import handle_ssbq, SubList, get_subs
 from .handle.coin_handle import mhy_bbs_coin, bbs_auto_coin
 from .handle.sign_handle import mhy_bbs_sign, bbs_auto_sign
@@ -333,15 +333,20 @@ async def _(event: PrivateMessageEvent, arg: Message = CommandArg()):
         "路路": "ll",
         "小灰灰": "ll",
         "ll": "ll",
+        "tt": "tt",
+        "套套": "tt"
     }
     url_choice = arg.extract_plain_text().strip()
     if url_choice:
         key = url_to_key.get(url_choice, "other")
-        if key:
-            result = gain_num(key)
+        if key != "other":
+            result = await gain_num(key)
+            result = "剩余" + result
             if result:
                 await get_num.finish(result, at_sender=True)
             else:
                 await get_num.finish("请求失败，请检查 key 是否失效或填写错误", at_sender=True)
+        else:
+            await get_num.finish("没有这种平台", at_sender=True)
     else:
         await get_num.finish("请在后面加上你要查询积分的平台")

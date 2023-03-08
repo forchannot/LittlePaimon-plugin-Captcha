@@ -20,11 +20,12 @@ class ConfigModel(BaseModel):
     ssbq_end: int = Field(6, alias='实时便签验证停止检查结束时间')
     ssbq_check: int = Field(16, alias='实时便签验证检查间隔')
 
-    ssbq_ch: bool = Field(True, alias='ssbq打码平台')
-    qd_ch: bool = Field(True, alias='米游社签到打码平台')
-    myb_ch: bool = Field(True, alias='米游币获取打码平台')
+    ssbq_ch: str = Field('', alias='ssbq打码平台')
+    qd_ch: str = Field('', alias='米游社签到打码平台')
+    myb_ch: str = Field('', alias='米游币获取打码平台')
     third_api: str = Field('', alias='第三方链接')
     rrocr_key: str = Field('', alias='人人打码appkey')
+    ttocr_key: str = Field('', alias='套套打码appkey')
     member_allow_list: List[int] = Field([], alias='开启验证的成员列表')
     group_allow_list: List[int] = Field([], alias='开启验证的群列表')
 

@@ -20,8 +20,8 @@ from LittlePaimon.utils.api import (
 from nonebot import get_bot, logger
 
 from ..config.config import config
-from ..utils.captcha import _HEADER, get_validate, get_sign_info, get_sign_list
-from ..utils.sign_draw import SignResult, draw_result
+from ..captcha.captcha import _HEADER, get_validate, get_sign_info, get_sign_list
+from ..draw.sign_draw import SignResult, draw_result
 
 http = httpx.Client(timeout=20, transport=httpx.HTTPTransport(retries=10))
 GEETEST_HEADER = {
@@ -114,10 +114,10 @@ async def mhy_bbs_sign(
                 logger.info(
                     f"米游社[验证]签到,用户{user_id},UID:{uid}出现校验码，开始尝试第{index + 1}次验证", True
                 )
-                if (config.rrocr_key or config.third_api) and sign_allow:
+                if (config.rrocr_key or config.third_api or config.ttocr_key) and sign_allow:
                     gt = sign_data["data"]["gt"]
                     challenge = sign_data["data"]["challenge"]
-                    validate, challeng = get_validate(gt, challenge, SIGN_ACTION_API, config.qd_ch)
+                    validate, challeng = await get_validate(gt, challenge, SIGN_ACTION_API, config.qd_ch)
                     if validate != "j" and challeng != "j":
                         delay = random.randint(5, 15)
                         Header["x-rpc-challenge"] = challeng

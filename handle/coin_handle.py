@@ -17,7 +17,7 @@ from ..api.api import (
     BBS_SHARE_URL,
 )
 from ..config.config import config
-from ..utils.captcha import get_pass_challenge, get_ds2
+from ..captcha.captcha import get_pass_challenge, get_ds2
 
 from LittlePaimon.database import PrivateCookie, MihoyoBBSSub, LastQuery
 from LittlePaimon.utils import logger, scheduler

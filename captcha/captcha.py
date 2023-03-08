@@ -1,3 +1,4 @@
+import asyncio
 import copy
 import random
 import re
@@ -18,6 +19,9 @@ from LittlePaimon.utils.api import (
 
 from nonebot import logger
 
+from .rr import rr, rr_jifen
+from .sf import sf, sf_jifen
+from .tt import tt, tt_result, tt_jifen
 from ..api.api import BBS_CAPATCH, BBS_CAPTCHA_VERIFY
 from ..config.config import config
 
@@ -47,22 +51,6 @@ def mihoyo_headers(cookie, challenge, q="", b=None) -> dict:
         "Referer": "https://webstatic.mihoyo.com/",
         "x-rpc-challenge": challenge,
     }
-
-
-def query_score():
-    response = http.get(
-        "http://api.rrocr.com/api/integral.html?appkey=" + config.rrocr_key
-    )
-    data = response.json()
-    if data["status"] == -1:
-        logger.info("查询积分失败")
-        return True, "查询积分失败"
-    integral = data["integral"]
-    if int(integral) < 10:
-        logger.info("积分不足")
-        return True, f"积分还剩{integral}"
-    logger.info("积分还剩" + integral)
-    return False, f"积分还剩{integral}"
 
 
 async def get_sign_list() -> dict:
@@ -108,7 +96,7 @@ def get_ds2(web: bool) -> str:
     return f"{i},{r},{c}"
 
 
-async def get_pass_challenge(uid: str, user_id: str, way: bool):
+async def get_pass_challenge(uid: str, user_id: str, way: str):
     cookie_info = await get_cookie(user_id, uid, True, True)
     headers = {
         "DS": get_ds2(web=False),
@@ -130,12 +118,12 @@ async def get_pass_challenge(uid: str, user_id: str, way: bool):
     data = req.json()
     if data["retcode"] != 0:
         return None
-    validate, _ = get_validate(
+    validate, _ = await get_validate(
         data["data"]["gt"],
         data["data"]["challenge"],
         "https://webstatic.mihoyo.com/bbs/event/signin-ys/index.html?bbs_auth_required=true&act_id"
         "=e202009291139501&utm_source=bbs&utm_medium=mys&utm_campaign=icon",
-        way
+        way,
     )
     if validate != "j":
         check_req = http.post(
@@ -154,76 +142,96 @@ async def get_pass_challenge(uid: str, user_id: str, way: bool):
     return None
 
 
-def get_validate(gt: str, challenge: str, referer: str, choose: bool):
+async def get_validate(gt: str, challenge: str, referer: str, choose: str):
     """validate,challenge"""
-    if choose:
-        validate, challenge = rrocr(gt, challenge, referer)
+    if choose == "rr":
+        validate, challenge = await rrocr(gt, challenge, referer)
+    elif choose == "sf":
+        validate, challenge = await other_api(gt, challenge)
+    elif choose == "tt":
+        validate, challenge = await ttocr(gt, challenge, referer)
     else:
-        validate, challenge = other_api(gt, challenge)
+        validate, challenge = "j", "j"
     return validate, challenge  # 失败返回'j' 成功返回validate
 
 
-def other_api(gt: str, challenge: str):
-    response = http.get(config.third_api + f"gt={gt}&challenge={challenge}", timeout=60)
+async def other_api(gt: str, challenge: str):
+    response = await sf(config.third_api, gt, challenge)
     data = response.json()
     if "data" in data and "validate" in data["data"]:
         logger.info("[第三方]成功")
-        validate = data["data"]["validate"]
-        challenge = data["data"]["challenge"]
+        validate, challenge = data["data"]["validate"], data["data"]["challenge"]
         return validate, challenge
     else:
-        validate = "j"
-        challenge = "j"  # 失败返回'j' 成功返回validate
+        validate, challenge = "j", "j"
         return validate, challenge
 
 
-def rrocr(gt: str, challenge: str, referer: str):
-    jifen, _ = query_score()
-    if jifen:
+async def rrocr(gt: str, challenge: str, referer: str):
+    ji_fen = await gain_num("rr")
+    if int(ji_fen) < 10:
         validate = "j"
         challenge = "j"
         return validate, challenge
-    response = http.post(
-        "http://api.rrocr.com/api/recognize.html",
-        params={
-            "appkey": config.rrocr_key,
-            "gt": gt,
-            "challenge": challenge,
-            "referer": referer,
-            "sharecode": "585dee4d4ef94e1cb95d5362a158ea54",
-        },
-        timeout=60,
-    )
+    response = await rr(gt, challenge, referer)
     data = response.json()
     if "data" in data and "validate" in data["data"]:
-        # logger.info(data["msg"])
-        validate = data["data"]["validate"]
-        challenge = data["data"]["challenge"]
+        logger.info(data["msg"])
+        validate, challenge = data["data"]["validate"], data["data"]["challenge"]
         return validate, challenge
     else:
-        # logger.info(data["msg"])  # 打码失败输出错误信息,返回'j'
-        validate = "j"
-        challenge = "j"
+        logger.info(data["msg"])  # 打码失败输出错误信息,返回'j'
+        validate, challenge = "j", "j"
         return validate, challenge  # 失败返回'j' 成功返回validate
 
 
-def gain_num(choice):
+async def ttocr(gt: str, challenge: str, referer: str):
+    ji_fen = await gain_num("tt")
+    if int(ji_fen) < 10:
+        validate, challenge = "j", "j"
+        logger.info("套套打码:积分不足")
+        return validate, challenge
+    get_id = await tt(gt, challenge, referer)
+    if get_id["status"] == 1:
+        result_id = get_id["resultid"]
+    else:
+        validate, challenge = "j", "j"
+        return validate, challenge
+    logger.info("等待15s获取结果")
+    await asyncio.sleep(15)
+    res = await tt_result(result_id)
+    if res["status"] == 1 and "data" in res and "validate" in res["data"]:
+        logger.info(res["msg"])  # 打码失败输出错误信息,返回'j'
+        validate, challenge = res["data"]["validate"], res["data"]["challenge"]
+        return validate, challenge
+    else:
+        logger.info(res["msg"])  # 打码失败输出错误信息,返回'j'
+        validate, challenge = "j", "j"
+        return validate, challenge  # 失败返回'j' 成功返回validate
+
+
+async def gain_num(choice):
     if choice == "rr" and config.rrocr_key:
-        data = http.get(
-            f"http://api.rrocr.com/api/integral.html?appkey={config.rrocr_key}"
-        ).json()
+        data = await rr_jifen()
         if data["status"] == 0:
             key_num = data["integral"]
-            return f"你剩余积分为{key_num}"
+            return key_num
+        else:
+            return "0"
     elif choice == "ll" and config.third_api:
         url = config.third_api
         match = re.search(r"token=([^&]+)", url)
         if match:
             token = match.group(1)
-            data = http.get(f"http://api.fuckmys.tk/token?token={token}").json()
+            data = await sf_jifen(token)
             if data["info"] == "success":
                 key_num = data["times"]
-                return f"你已经使用了为{key_num}次，剩余{2333-key_num}次"
-    elif choice == "other":
-        return "暂不支持查询其他平台剩余次数，请前往（https://github.com/forchannot/LittlePaimon-plugin-Captchapr）pr或者自行修改源码"
+                return 2333-key_num
+    elif choice == "tt" and config.ttocr_key:
+        data = await tt_jifen()
+        if data["status"] == 1:
+            key_num = data["points"]
+            return key_num
+        else:
+            return "0"
     return None
