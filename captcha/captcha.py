@@ -170,13 +170,13 @@ async def other_api(gt: str, challenge: str):
 async def rrocr(gt: str, challenge: str, referer: str):
     ji_fen = await gain_num("rr")
     if int(ji_fen) < 10:
-        validate = "j"
-        challenge = "j"
+        validate, challenge = "j", "j"
+        logger.info("人人打码:积分不足")
         return validate, challenge
     response = await rr(gt, challenge, referer)
     data = response.json()
     if "data" in data and "validate" in data["data"]:
-        logger.info(data["msg"])
+        # logger.info(data["msg"])
         validate, challenge = data["data"]["validate"], data["data"]["challenge"]
         return validate, challenge
     else:
@@ -201,7 +201,7 @@ async def ttocr(gt: str, challenge: str, referer: str):
     await asyncio.sleep(15)
     res = await tt_result(result_id)
     if res["status"] == 1 and "data" in res and "validate" in res["data"]:
-        logger.info(res["msg"])  # 打码失败输出错误信息,返回'j'
+        # logger.info(res["msg"])
         validate, challenge = res["data"]["validate"], res["data"]["challenge"]
         return validate, challenge
     else:
@@ -226,7 +226,7 @@ async def gain_num(choice):
             data = await sf_jifen(token)
             if data["info"] == "success":
                 key_num = data["times"]
-                return 2333-key_num
+                return 2333 - key_num
     elif choice == "tt" and config.ttocr_key:
         data = await tt_jifen()
         if data["status"] == 1:
