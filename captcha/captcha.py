@@ -5,7 +5,6 @@ import re
 import string
 import time
 from typing import Union
-import httpx
 
 from LittlePaimon.database import PrivateCookie
 from LittlePaimon.utils.api import (
@@ -16,16 +15,13 @@ from LittlePaimon.utils.api import (
     md5,
     SIGN_REWARD_API,
 )
+from LittlePaimon.utils.requests import aiorequests
 
 from nonebot import logger
 
-from .rr import rr, rr_jifen
-from .sf import sf, sf_jifen
-from .tt import tt, tt_result, tt_jifen
 from ..api.api import BBS_CAPATCH, BBS_CAPTCHA_VERIFY
 from ..config.config import config
 
-http = httpx.Client(timeout=20, transport=httpx.HTTPTransport(retries=10))
 
 _HEADER = {
     "x-rpc-app_version": "2.11.1",
@@ -54,7 +50,7 @@ def mihoyo_headers(cookie, challenge, q="", b=None) -> dict:
 
 
 async def get_sign_list() -> dict:
-    req = http.get(
+    req = await aiorequests.get(
         url=SIGN_REWARD_API, headers=_HEADER, params={"act_id": "e202009291139501"}
     )
     data = req.json()
@@ -66,7 +62,7 @@ async def get_sign_info(user_id: str, uid: str) -> Union[dict, str]:
     server_id = "cn_qd01" if uid[0] == "5" else "cn_gf01"
     header = copy.deepcopy(_HEADER)
     header["Cookie"] = cookie_info.cookie
-    req = http.get(
+    req = await aiorequests.get(
         url=SIGN_INFO_API,
         headers=header,
         params={"act_id": "e202009291139501", "region": server_id, "uid": uid},
@@ -114,7 +110,7 @@ async def get_pass_challenge(uid: str, user_id: str, way: str):
         "Host": "bbs-api.mihoyo.com",
         "User-Agent": "okhttp/4.8.0",
     }
-    req = http.get(url=BBS_CAPATCH, headers=headers)
+    req = await aiorequests.get(url=BBS_CAPATCH, headers=headers)
     data = req.json()
     if data["retcode"] != 0:
         return None
@@ -126,7 +122,7 @@ async def get_pass_challenge(uid: str, user_id: str, way: str):
         way,
     )
     if validate != "j":
-        check_req = http.post(
+        check_req = await aiorequests.post(
             url=BBS_CAPTCHA_VERIFY,
             headers=headers,
             json={
@@ -136,7 +132,7 @@ async def get_pass_challenge(uid: str, user_id: str, way: str):
             },
         )
         check = check_req.json()
-        logger.info(f"check{check}")
+        # logger.info(f"check{check}")
         if check["retcode"] == 0:
             return check["data"]["challenge"]
     return None
@@ -156,7 +152,9 @@ async def get_validate(gt: str, challenge: str, referer: str, choose: str):
 
 
 async def other_api(gt: str, challenge: str):
-    response = await sf(config.third_api, gt, challenge)
+    response = await aiorequests.get(
+        url=f"{config.third_api}gt={gt}&challenge={challenge}", timeout=60
+    )
     data = response.json()
     if "data" in data and "validate" in data["data"]:
         logger.info("[第三方]成功")
@@ -173,7 +171,17 @@ async def rrocr(gt: str, challenge: str, referer: str):
         validate, challenge = "j", "j"
         logger.info("人人打码:积分不足")
         return validate, challenge
-    response = await rr(gt, challenge, referer)
+    response = await aiorequests.post(
+        url="http://api.rrocr.com/api/recognize.html",
+        params={
+            "appkey": config.rrocr_key,
+            "gt": gt,
+            "challenge": challenge,
+            "referer": referer,
+            "sharecode": "585dee4d4ef94e1cb95d5362a158ea54",
+        },
+        timeout=60,
+    )
     data = response.json()
     if "data" in data and "validate" in data["data"]:
         # logger.info(data["msg"])
@@ -191,7 +199,18 @@ async def ttocr(gt: str, challenge: str, referer: str):
         validate, challenge = "j", "j"
         logger.info("套套打码:积分不足")
         return validate, challenge
-    get_id = await tt(gt, challenge, referer)
+    get_id = await aiorequests.post(
+        "http://api.ttocr.com/api/recognize",
+        data={
+            "appkey": config.ttocr_key,
+            "gt": gt,
+            "challenge": challenge,
+            "itemid": 388,
+            "referer": referer,
+        },
+        timeout=60,
+    )
+    get_id = get_id.json()
     if get_id["status"] == 1:
         result_id = get_id["resultid"]
     else:
@@ -199,7 +218,15 @@ async def ttocr(gt: str, challenge: str, referer: str):
         return validate, challenge
     logger.info("等待15s获取结果")
     await asyncio.sleep(15)
-    res = await tt_result(result_id)
+    res = await aiorequests.post(
+        url="http://api.ttocr.com/api/results",
+        data={
+            "appkey": config.ttocr_key,
+            "resultid": result_id,
+        },
+        timeout=60,
+    )
+    res = res.json()
     if res["status"] == 1 and "data" in res and "validate" in res["data"]:
         # logger.info(res["msg"])
         validate, challenge = res["data"]["validate"], res["data"]["challenge"]
@@ -212,7 +239,10 @@ async def ttocr(gt: str, challenge: str, referer: str):
 
 async def gain_num(choice):
     if choice == "rr" and config.rrocr_key:
-        data = await rr_jifen()
+        data = await aiorequests.get(
+            f"http://api.rrocr.com/api/integral.html?appkey={config.rrocr_key}"
+        )
+        data = data.json()
         if data["status"] == 0:
             key_num = data["integral"]
             return key_num
@@ -223,12 +253,18 @@ async def gain_num(choice):
         match = re.search(r"token=([^&]+)", url)
         if match:
             token = match.group(1)
-            data = await sf_jifen(token)
+            data = await aiorequests.get(
+                url=f"http://api.fuckmys.tk/token?token={token}"
+            )
+            data = data.json()
             if data["info"] == "success":
                 key_num = data["times"]
                 return 2333 - key_num
     elif choice == "tt" and config.ttocr_key:
-        data = await tt_jifen()
+        data = await aiorequests.get(
+            url=f"http://api.ttocr.com/api/points?appkey={config.ttocr_key}"
+        )
+        data = data.json()
         if data["status"] == 1:
             key_num = data["points"]
             return key_num
