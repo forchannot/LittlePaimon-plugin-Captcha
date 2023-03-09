@@ -73,7 +73,7 @@ coding_form = Form(
                     labelRemark=Remark(
                         shape="circle",
                         content="例如：http(s)://abc.bb?token=xxx&,或者http("
-                        "s)://abc.bb/token=xxx$，具体请看第三方平台api",
+                        "s)://abc.bb/token=xxx&，具体请看第三方平台api",
                     ),
                 ),
                 InputText(
