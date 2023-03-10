@@ -93,7 +93,7 @@ coding_form = Form(
                     placeholder="输入你在套套打码获取的appkey",
                     labelRemark=Remark(
                         shape="circle",
-                        content="用于签到，米游币和个人信息过验证码，请到https://www.52eth.co/user/index.html注册账号并获取appkey",
+                        content="用于签到，米游币和个人信息过验证码，请到http://www.ttocr.com/user/index.html注册账号并获取appkey",
                     ),
                 ),
             ],
