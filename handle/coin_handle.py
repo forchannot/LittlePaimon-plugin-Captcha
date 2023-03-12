@@ -5,6 +5,10 @@ import time
 from collections import defaultdict
 from typing import Tuple
 
+from LittlePaimon.database import PrivateCookie, MihoyoBBSSub, LastQuery
+from LittlePaimon.utils import logger, scheduler
+from LittlePaimon.utils.api import random_text, random_hex
+from LittlePaimon.utils.requests import aiorequests
 from nonebot import get_bot
 
 from ..api.api import (
@@ -15,14 +19,10 @@ from ..api.api import (
     BBS_DETAIL_URL,
     BBS_LIKE_URL,
     BBS_SHARE_URL,
+    mihoyobbs_version,
 )
+from ..captcha.captcha import get_pass_challenge, get_ds2, get_ds_x6
 from ..config.config import config
-from ..captcha.captcha import get_pass_challenge, get_ds2
-
-from LittlePaimon.database import PrivateCookie, MihoyoBBSSub, LastQuery
-from LittlePaimon.utils import logger, scheduler
-from LittlePaimon.utils.api import random_text, random_hex, get_ds
-from LittlePaimon.utils.requests import aiorequests
 
 
 class MihoyoBBSCoin:
@@ -35,7 +35,7 @@ class MihoyoBBSCoin:
             "DS": get_ds2(web=False),
             "cookie": cookies,
             "x-rpc-client_type": "2",
-            "x-rpc-app_version": "2.38.1",
+            "x-rpc-app_version": mihoyobbs_version,
             "x-rpc-sys_version": "12",
             "x-rpc-channel": "miyousheluodi",
             "x-rpc-device_id": random_hex(32),
@@ -166,7 +166,7 @@ class MihoyoBBSCoin:
             while True:
                 if sts == 1 or num == 3:
                     break
-                header["DS"] = get_ds("", {"gids": i["id"]}, True)
+                header["DS"] = get_ds_x6("", {"gids": i["id"]}, True)
                 req = await aiorequests.post(
                     url=BBS_SIGN_URL, json={"gids": i["id"]}, headers=header
                 )
@@ -175,7 +175,9 @@ class MihoyoBBSCoin:
                 if data["retcode"] != 0:
                     if data["retcode"] == 1034:
                         logger.info(f"社区签到触发验证码,第{num+1}次尝试绕过")
-                        challenge = await get_pass_challenge(self.uid, self.user_id, config.myb_ch)
+                        challenge = await get_pass_challenge(
+                            self.uid, self.user_id, config.myb_ch
+                        )
                         if challenge is not None:
                             header["x-rpc-challenge"] = challenge
                             logger.info("已获取验证码,正在重新请求")

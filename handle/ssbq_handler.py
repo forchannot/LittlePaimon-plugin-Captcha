@@ -61,7 +61,7 @@ async def handle_ssbq(player: Player, sign_allow: bool):
         )
         return f"{player.uid}{data}\n"
     elif data["retcode"] == 1034:
-        if (config.rrocr_key or config.third_api) and sign_allow:
+        if (config.rrocr_key or config.third_api or config.ttocr_key) and sign_allow:
             logger.info(
                 "原神实时便签",
                 "➤",
@@ -69,7 +69,9 @@ async def handle_ssbq(player: Player, sign_allow: bool):
                 "获取数据失败，状态码为1034，疑似验证码",
                 False,
             )
-            challenge = await get_pass_challenge(player.uid, player.user_id, config.ssbq_ch)
+            challenge = await get_pass_challenge(
+                player.uid, player.user_id, config.ssbq_ch
+            )
             if challenge is not None:
                 server_id = "cn_qd01" if player.uid[0] == "5" else "cn_gf01"
                 cookie_info = await PrivateCookie.get_or_none(

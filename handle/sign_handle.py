@@ -6,32 +6,28 @@ import time
 from collections import defaultdict
 from typing import Tuple, Union
 
-import httpx
 from LittlePaimon.database import MihoyoBBSSub, PrivateCookie, LastQuery
 from LittlePaimon.utils import logger, scheduler, DRIVER
 from LittlePaimon.utils.api import (
     get_sign_reward_list,
     SIGN_ACTION_API,
     random_hex,
-    get_old_version_ds,
     check_retcode,
     get_mihoyo_private_data,
 )
+from LittlePaimon.utils.requests import aiorequests
 from nonebot import get_bot, logger
 
+from ..captcha.captcha import (
+    _HEADER,
+    get_validate,
+    get_sign_info,
+    get_sign_list,
+    get_ds2,
+)
 from ..config.config import config
-from ..captcha.captcha import _HEADER, get_validate, get_sign_info, get_sign_list
 from ..draw.sign_draw import SignResult, draw_result
 
-http = httpx.Client(timeout=20, transport=httpx.HTTPTransport(retries=10))
-GEETEST_HEADER = {
-    "Accept": "*/*",
-    "X-Requested-With": "com.mihoyo.hyperion",
-    "User-Agent": "Mozilla/5.0 (Linux; Android 12; Unspecified Device) AppleWebKit/537.36 (KHTML, like Gecko) "
-    "Version/4.0 Chrome/103.0.5060.129 Mobile Safari/537.36 miHoYoBBS/2.35.2",
-    "Referer": "https://webstatic.mihoyo.com/",
-    "Accept-Language": "zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7",
-}
 sign_reward_list: dict = {}
 
 
@@ -39,24 +35,17 @@ async def sign_action(user_id: str, uid: str, Header={}) -> Union[dict, str]:
     cookie_info = await PrivateCookie.get_or_none(user_id=user_id, uid=uid)
     server_id = "cn_qd01" if uid[0] == "5" else "cn_gf01"
     HEADER = copy.deepcopy(_HEADER)
-    HEADER["User_Agent"] = (
-        "Mozilla/5.0 (Linux; Android 10; MIX 2 Build/QKQ1.190825.002; wv) "
-        "AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 "
-        "Chrome/83.0.4103.101 Mobile Safari/537.36 miHoYoBBS/2.35.2"
-    )
     HEADER["Cookie"] = cookie_info.cookie
     HEADER["x-rpc-device_id"] = random_hex(32)
-    HEADER["x-rpc-app_version"] = "2.35.2"
-    HEADER["x-rpc-client_type"] = "5"
     HEADER["X_Requested_With"] = "com.mihoyo.hyperion"
-    HEADER["DS"] = get_old_version_ds(True)
+    HEADER["DS"] = get_ds2(web=True)
     HEADER["Referer"] = (
         "https://webstatic.mihoyo.com/bbs/event/signin-ys/index.html"
         "?bbs_auth_required=true&act_id=e202009291139501&utm_source=bbs"
         "&utm_medium=mys&utm_campaign=icon"
     )
     HEADER.update(Header)
-    req = http.post(
+    req = await aiorequests.post(
         url=SIGN_ACTION_API,
         headers=HEADER,
         json={"act_id": "e202009291139501", "uid": uid, "region": server_id},
@@ -73,6 +62,7 @@ async def mhy_bbs_sign(
 ) -> Tuple[SignResult, str]:
     """
     执行米游社原神签到，返回签到成功天数或失败原因
+    :param sign_allow: 白名单
     :param user_id: 用户id
     :param uid: 原神uid
     :return: 签到成功天数或失败原因
@@ -114,10 +104,14 @@ async def mhy_bbs_sign(
                 logger.info(
                     f"米游社[验证]签到,用户{user_id},UID:{uid}出现校验码，开始尝试第{index + 1}次验证", True
                 )
-                if (config.rrocr_key or config.third_api or config.ttocr_key) and sign_allow:
+                if (
+                    config.rrocr_key or config.third_api or config.ttocr_key
+                ) and sign_allow:
                     gt = sign_data["data"]["gt"]
                     challenge = sign_data["data"]["challenge"]
-                    validate, challeng = await get_validate(gt, challenge, SIGN_ACTION_API, config.qd_ch)
+                    validate, challeng = await get_validate(
+                        gt, challenge, SIGN_ACTION_API, config.qd_ch
+                    )
                     if validate != "j" and challeng != "j":
                         delay = random.randint(5, 15)
                         Header["x-rpc-challenge"] = challeng
@@ -203,7 +197,10 @@ async def bbs_auto_sign():
     sign_result_group = defaultdict(list)
     sign_result_private = defaultdict(list)
     for sub in subs:
-        if sub.user_id in config.member_allow_list or sub.group_id in config.group_allow_list:
+        if (
+            sub.user_id in config.member_allow_list
+            or sub.group_id in config.group_allow_list
+        ):
             result, msg = await mhy_bbs_sign(True, str(sub.user_id), sub.uid)  # 执行验证签到
         else:
             result, msg = await mhy_bbs_sign(False, str(sub.user_id), sub.uid)  # 执行普通签到
@@ -234,6 +231,7 @@ async def bbs_auto_sign():
         else:
             await asyncio.sleep(random.randint(60, 90))
 
+    logger.info("米游社原神签到", "全部执行完毕,开始处理群结果")
     for group_id, sign_result in sign_result_group.items():
         # 发送签到结果到群
         img = await draw_result(group_id, sign_result)
@@ -243,6 +241,7 @@ async def bbs_auto_sign():
             logger.info("米游社原神签到", "➤➤", {"群": group_id}, f"发送签到结果失败: {e}", False)
         await asyncio.sleep(random.randint(3, 6))
 
+    logger.info("米游社原神签到", "全部执行完毕,开始处理个人结果")
     for user_id, sign_result in sign_result_private.items():
         for result in sign_result:
             try:

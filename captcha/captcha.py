@@ -1,5 +1,6 @@
 import asyncio
 import copy
+import json
 import random
 import re
 import string
@@ -11,24 +12,28 @@ from LittlePaimon.utils.api import (
     SIGN_INFO_API,
     get_cookie,
     random_hex,
-    get_ds,
     md5,
     SIGN_REWARD_API,
+    random_text,
 )
 from LittlePaimon.utils.requests import aiorequests
-
 from nonebot import logger
 
-from ..api.api import BBS_CAPATCH, BBS_CAPTCHA_VERIFY
+from ..api.api import (
+    BBS_CAPATCH,
+    BBS_CAPTCHA_VERIFY,
+    mihoyobbs_salt,
+    mihoyobbs_salt_web,
+    mihoyobbs_salt_x6,
+    mihoyobbs_version,
+    mihoyobbs_salt_x4,
+)
 from ..config.config import config
 
-
 _HEADER = {
-    "x-rpc-app_version": "2.11.1",
-    "User-Agent": (
-        "Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) "
-        "AppleWebKit/605.1.15 (KHTML, like Gecko) miHoYoBBS/2.11.1"
-    ),
+    "x-rpc-app_version": mihoyobbs_version,
+    "User-Agent": "Mozilla/5.0 (Linux; Android 12; Unspecified Device) AppleWebKit/537.36 (KHTML, like Gecko) "
+    f"Version/4.0 Chrome/103.0.5060.129 Mobile Safari/537.36 miHoYoBBS/{mihoyobbs_version}",
     "x-rpc-client_type": "5",
     "Referer": "https://webstatic.mihoyo.com/",
     "Origin": "https://webstatic.mihoyo.com",
@@ -37,12 +42,12 @@ _HEADER = {
 
 def mihoyo_headers(cookie, challenge, q="", b=None) -> dict:
     return {
-        "DS": get_ds(q, b),
+        "DS": get_ds_x6(q, b),
         "Origin": "https://webstatic.mihoyo.com",
         "Cookie": cookie,
-        "x-rpc-app_version": "2.11.1",
+        "x-rpc-app_version": mihoyobbs_version,
         "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS "
-        "X) AppleWebKit/605.1.15 (KHTML, like Gecko) miHoYoBBS/2.11.1",
+        f"X) AppleWebKit/605.1.15 (KHTML, like Gecko) miHoYoBBS/{mihoyobbs_version}",
         "x-rpc-client_type": "5",
         "Referer": "https://webstatic.mihoyo.com/",
         "x-rpc-challenge": challenge,
@@ -76,19 +81,27 @@ def timestamp() -> int:
     return int(time.time())
 
 
-# 随机文本
-def random_text(num: int) -> str:
-    return "".join(random.sample(string.ascii_lowercase + string.digits, num))
-
-
 def get_ds2(web: bool) -> str:
     if web:
-        n = "yUZ3s0Sna1IrSNfk29Vo6vRapdOyqyhB"
+        n = mihoyobbs_salt_web
     else:
-        n = "PVeGWIZACpxXZ1ibMVJPi9inCY4Nd4y2"
+        n = mihoyobbs_salt
     i = str(timestamp())
     r = random_text(6)
     c = md5("salt=" + n + "&t=" + i + "&r=" + r)
+    return f"{i},{r},{c}"
+
+
+def get_ds_x6(q: str = "", b: dict = None, sign: bool = False) -> str:
+    b = json.dumps(b) if b else ""
+    if sign:
+        n = mihoyobbs_salt_x6
+    else:
+        n = mihoyobbs_salt_x4
+    i = str(int(time.time()))
+    r = str(random.randint(100000, 200000))
+    add = f"&b={b}&q={q}"
+    c = md5("salt=" + n + "&t=" + i + "&r=" + r + add)
     return f"{i},{r},{c}"
 
 
@@ -98,7 +111,7 @@ async def get_pass_challenge(uid: str, user_id: str, way: str):
         "DS": get_ds2(web=False),
         "cookie": cookie_info.stoken,
         "x-rpc-client_type": "2",
-        "x-rpc-app_version": "2.38.1",
+        "x-rpc-app_version": mihoyobbs_version,
         "x-rpc-sys_version": "12",
         "x-rpc-channel": "miyousheluodi",
         "x-rpc-device_id": random_hex(32),
