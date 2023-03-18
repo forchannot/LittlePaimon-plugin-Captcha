@@ -87,7 +87,7 @@ all_coin = on_command(
 )
 ssbq = on_command(
     "ssbq",
-    aliases={"实时便笺", "实时便签", "当前树脂"},
+    aliases={"实时便笺", "实时便签", "当前树脂", "体力", "查询体力"},
     priority=9,
     block=True,
     state={
