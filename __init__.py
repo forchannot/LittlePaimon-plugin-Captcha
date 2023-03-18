@@ -47,6 +47,7 @@ sign = on_command(
 )
 all_sign = on_command(
     "全部重签",
+    aliases={"mys全部重签", "米游社全部重签"},
     priority=8,
     block=True,
     permission=SUPERUSER,
@@ -72,6 +73,7 @@ get_coin = on_command(
 )
 all_coin = on_command(
     "myb全部重做",
+    aliases={"米游币全部重做"},
     priority=8,
     block=True,
     permission=SUPERUSER,
@@ -334,7 +336,7 @@ async def _(event: PrivateMessageEvent, arg: Message = CommandArg()):
         "小灰灰": "ll",
         "ll": "ll",
         "tt": "tt",
-        "套套": "tt"
+        "套套": "tt",
     }
     url_choice = arg.extract_plain_text().strip()
     if url_choice:
