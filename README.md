@@ -95,7 +95,7 @@ ssbq打码平台: rr
 
 * [GenshinUID](https://github.com/KimigaiiWuyi/GenshinUID/tree/nonebot2-beta1)签到代码
 
-* [LittlePaimon-plugin-Abyss](https://github.com/CM-Edelweiss/LittlePaimon-plugin-Abyss)（本项目和该项目实现功能相同,仅仅在功能上做了些许细化区分）
+* [LittlePaimon-plugin-Abyss](https://github.com/CM-Edelweiss/LittlePaimon-plugin-Abyss)
 
 
 
@@ -104,4 +104,7 @@ ssbq打码平台: rr
 [原神模拟圣遗物](https://github.com/forchannot/nonebot_plugin_artifact)
 
 [定时更改群名片](https://github.com/forchannot/nonebot_plugin_rename)
+
+[原神历史卡池信息](https://github.com/forchannot/nonebot-plugin-gshisbanner)
+
 

@@ -145,7 +145,6 @@ async def get_pass_challenge(uid: str, user_id: str, way: str):
             },
         )
         check = check_req.json()
-        # logger.info(f"check{check}")
         if check["retcode"] == 0:
             return check["data"]["challenge"]
     return None
@@ -165,89 +164,96 @@ async def get_validate(gt: str, challenge: str, referer: str, choose: str):
 
 
 async def other_api(gt: str, challenge: str):
-    response = await aiorequests.get(
-        url=f"{config.third_api}gt={gt}&challenge={challenge}", timeout=60
-    )
-    data = response.json()
+    try:
+        response = await aiorequests.get(
+            url=f"{config.third_api}gt={gt}&challenge={challenge}", timeout=60
+        )
+        data = response.json()
+    except Exception as e:
+        logger.info(f"[第三方]请求失败{e}")
+        return "j", "j"
     if "data" in data and "validate" in data["data"]:
         logger.info("[第三方]成功")
         validate, challenge = data["data"]["validate"], data["data"]["challenge"]
         return validate, challenge
     else:
-        validate, challenge = "j", "j"
-        return validate, challenge
+        return "j", "j"
 
 
 async def rrocr(gt: str, challenge: str, referer: str):
     ji_fen = await gain_num("rr")
     if int(ji_fen) < 10:
-        validate, challenge = "j", "j"
         logger.info("人人打码:积分不足")
-        return validate, challenge
-    response = await aiorequests.post(
-        url="http://api.rrocr.com/api/recognize.html",
-        params={
-            "appkey": config.rrocr_key,
-            "gt": gt,
-            "challenge": challenge,
-            "referer": referer,
-            "sharecode": "585dee4d4ef94e1cb95d5362a158ea54",
-        },
-        timeout=60,
-    )
-    data = response.json()
+        return "j", "j"
+    params = {
+        "appkey": config.rrocr_key,
+        "gt": gt,
+        "challenge": challenge,
+        "referer": referer,
+        "sharecode": "585dee4d4ef94e1cb95d5362a158ea54",
+    }
+    try:
+        response = await aiorequests.post(
+            url="http://api.rrocr.com/api/recognize.html",
+            params=params,
+            timeout=60,
+        )
+        data = response.json()
+    except Exception as e:
+        logger.info(f"人人打码请求失败:{e}")
+        return "j", "j"
     if "data" in data and "validate" in data["data"]:
-        # logger.info(data["msg"])
         validate, challenge = data["data"]["validate"], data["data"]["challenge"]
         return validate, challenge
     else:
         logger.info(data["msg"])  # 打码失败输出错误信息,返回'j'
-        validate, challenge = "j", "j"
-        return validate, challenge  # 失败返回'j' 成功返回validate
+        return "j", "j"  # 失败返回'j' 成功返回validate
 
 
 async def ttocr(gt: str, challenge: str, referer: str):
     ji_fen = await gain_num("tt")
     if int(ji_fen) < 10:
-        validate, challenge = "j", "j"
         logger.info("套套打码:积分不足")
-        return validate, challenge
-    get_id = await aiorequests.post(
-        "http://api.ttocr.com/api/recognize",
-        data={
-            "appkey": config.ttocr_key,
-            "gt": gt,
-            "challenge": challenge,
-            "itemid": 388,
-            "referer": referer,
-        },
-        timeout=60,
-    )
-    get_id = get_id.json()
-    if get_id["status"] == 1:
-        result_id = get_id["resultid"]
-    else:
-        validate, challenge = "j", "j"
-        return validate, challenge
+        return "j", "j"
+    data = {
+        "appkey": config.ttocr_key,
+        "gt": gt,
+        "challenge": challenge,
+        "itemid": 388,
+        "referer": referer,
+    }
+    try:
+        get_id = await aiorequests.post(
+            "http://api.ttocr.com/api/recognize",
+            data=data,
+            timeout=60,
+        )
+        get_id = get_id.json()
+    except Exception as e:
+        logger.info(f"套套打码验证请求失败:{e}")
+        return "j", "j"
+    result_id = get_id["resultid"]
     logger.info("等待15s获取结果")
     await asyncio.sleep(15)
-    res = await aiorequests.post(
-        url="http://api.ttocr.com/api/results",
-        data={
-            "appkey": config.ttocr_key,
-            "resultid": result_id,
-        },
-        timeout=60,
-    )
-    res = res.json()
-    if res["status"] == 1 and "data" in res and "validate" in res["data"]:
-        # logger.info(res["msg"])
+    try:
+        res = await aiorequests.post(
+            url="http://api.ttocr.com/api/results",
+            data={
+                "appkey": config.ttocr_key,
+                "resultid": result_id,
+            },
+            timeout=60,
+        )
+        res = res.json()
+    except Exception as e:
+        logger.info(f"套套打码结果获取请求失败:{e}")
+        return "j", "j"
+    if "data" in res and "validate" in res["data"]:
         validate, challenge = res["data"]["validate"], res["data"]["challenge"]
         return validate, challenge
     else:
         logger.info(res["msg"])  # 打码失败输出错误信息,返回'j'
-        validate, challenge = "j", "j"
-        return validate, challenge  # 失败返回'j' 成功返回validate
+        return "j", "j"  # 失败返回'j' 成功返回validate
 
 
 async def gain_num(choice):

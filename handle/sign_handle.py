@@ -231,7 +231,7 @@ async def bbs_auto_sign():
         else:
             await asyncio.sleep(random.randint(60, 90))
 
-    logger.info("米游社原神签到", "全部执行完毕,开始处理群结果")
+    logger.info("米游社原神签到➤➤全部执行完毕,开始处理群结果")
     for group_id, sign_result in sign_result_group.items():
         # 发送签到结果到群
         img = await draw_result(group_id, sign_result)
@@ -241,7 +241,7 @@ async def bbs_auto_sign():
             logger.info("米游社原神签到", "➤➤", {"群": group_id}, f"发送签到结果失败: {e}", False)
         await asyncio.sleep(random.randint(3, 6))
 
-    logger.info("米游社原神签到", "全部执行完毕,开始处理个人结果")
+    logger.info("米游社原神签到➤➤全部执行完毕,开始处理个人结果")
     for user_id, sign_result in sign_result_private.items():
         for result in sign_result:
             try:
@@ -255,7 +255,7 @@ async def bbs_auto_sign():
                 logger.info("米游社原神签到", "➤➤", {"用户": user_id}, f"发送签到结果失败: {e}", False)
         await asyncio.sleep(random.randint(3, 6))
 
-    logger.info("米游社原神签到", f"签到完成，共花费<m>{round((time.time() - t) / 60, 2)}</m>分钟")
+    logger.info(f"米游社原神签到完成，共花费<m>{round((time.time() - t) / 60, 2)}</m>分钟")
 
 
 @DRIVER.on_startup
