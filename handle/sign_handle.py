@@ -16,7 +16,7 @@ from LittlePaimon.utils.api import (
     get_mihoyo_private_data,
 )
 from LittlePaimon.utils.requests import aiorequests
-from nonebot import get_bot, logger
+from nonebot import get_bot
 
 from ..captcha.captcha import (
     _HEADER,
@@ -74,12 +74,14 @@ async def mhy_bbs_sign(
     # 获得签到信息
     sign_info = await get_mihoyo_private_data(uid, user_id, "sign_info")
     if isinstance(sign_info, str):
-        logger.info(f"米游社[验证]签到,用户{user_id},UID:{uid}未绑定私人cookie或已失效", True)
+        logger.info(
+            "米游社原神签到", "➤", {"用户": user_id, "UID": uid}, "未绑定私人cookie或已失效", False
+        )
         await MihoyoBBSSub.filter(user_id=user_id, uid=uid).delete()
         return SignResult.FAIL, sign_info
     elif sign_info["data"]["is_sign"]:
         signed_days = sign_info["data"]["total_sign_day"] - 1
-        logger.info(f"米游社[验证]签到,用户{user_id},UID:{uid}今天已经签过了", True)
+        logger.info("米游社原神签到", "➤", {"用户": user_id, "UID": uid}, "今天已经签过了", True)
         if sign_reward_list:
             return (
                 SignResult.DONE,
@@ -102,7 +104,11 @@ async def mhy_bbs_sign(
             # 出现校验码
             if sign_data["data"]["risk_code"] == 375:
                 logger.info(
-                    f"米游社[验证]签到,用户{user_id},UID:{uid}出现校验码，开始尝试第{index + 1}次验证", True
+                    "米游社原神签到",
+                    "➤",
+                    {"用户": user_id, "UID": uid},
+                    f"出现验证码，开始进行第{index + 1}次尝试绕过",
+                    False,
                 )
                 if (
                     config.rrocr_key or config.third_api or config.ttocr_key
@@ -133,21 +139,26 @@ async def mhy_bbs_sign(
             # 成功签到!
             else:
                 if index == 0:
-                    logger.info(f"米游社签到,用户{user_id},UID:{uid}无验证码", True)
+                    logger.info(f"米游社签到,用户{user_id},UID:{uid}无验证码", result_type=True)
                     result = "[无验证]"
                 else:
-                    logger.info(f"米游社[验证]签到,用户{user_id},UID:{uid}重试{index} 次验证成功", True)
+                    logger.info(
+                        f"米游社[验证]签到,用户{user_id},UID:{uid}重试{index} 次验证成功",
+                        result_type=True,
+                    )
                     result = "[验证]"
                 break
         # 重试超过阈值
         else:
             result = "签到失败...请求失败!" + "\n" + "无法绕过验证码"
-            logger.info(f"米游社[验证]签到,用户{user_id},UID:{uid}超过请求阈值", True)
+            logger.info(f"米游社[验证]签到,用户{user_id},UID:{uid}超过请求阈值", result_type=False)
             return SignResult.FAIL, result
     # 签到失败
     else:
         result = "签到失败!"
-        logger.info(f"米游社[验证]签到,用户{user_id},UID:{uid}签到失败, 结果: {result}", True)
+        logger.info(
+            f"米游社[验证]签到,用户{user_id},UID:{uid}签到失败, 结果: {result}", result_type=False
+        )
         return SignResult.FAIL, result
     sign_info = sign_info["data"]
     sign_list = await get_sign_list()
@@ -165,7 +176,8 @@ async def mhy_bbs_sign(
     sign_missed = sign_info["sign_cnt_missed"]
     result = mes_im + result + "!" + "\n" + f"本月漏签次数：{sign_missed}" + "\n" + get_im
     logger.info(
-        f"米游社[验证]签到,用户{user_id},UID:{uid}签到完成, 结果: {mes_im}, 漏签次数: {sign_missed}", True
+        f"米游社[验证]签到,用户{user_id},UID:{uid}签到完成, 结果: {mes_im}, 漏签次数: {sign_missed}",
+        result_type=True,
     )
     return SignResult.SUCCESS, result
 
@@ -231,7 +243,7 @@ async def bbs_auto_sign():
         else:
             await asyncio.sleep(random.randint(60, 90))
 
-    logger.info("米游社原神签到➤➤全部执行完毕,开始处理群结果")
+    logger.info("米游社原神签到", "➤➤", result="全部执行完毕,开始处理群结果")
     for group_id, sign_result in sign_result_group.items():
         # 发送签到结果到群
         img = await draw_result(group_id, sign_result)
@@ -241,7 +253,7 @@ async def bbs_auto_sign():
             logger.info("米游社原神签到", "➤➤", {"群": group_id}, f"发送签到结果失败: {e}", False)
         await asyncio.sleep(random.randint(3, 6))
 
-    logger.info("米游社原神签到➤➤全部执行完毕,开始处理个人结果")
+    logger.info("米游社原神签到", "➤➤", result="全部执行完毕,开始处理个人结果")
     for user_id, sign_result in sign_result_private.items():
         for result in sign_result:
             try:
@@ -255,7 +267,7 @@ async def bbs_auto_sign():
                 logger.info("米游社原神签到", "➤➤", {"用户": user_id}, f"发送签到结果失败: {e}", False)
         await asyncio.sleep(random.randint(3, 6))
 
-    logger.info(f"米游社原神签到完成，共花费<m>{round((time.time() - t) / 60, 2)}</m>分钟")
+    logger.info("米游社原神签到", f"签到完成，共花费<m>{round((time.time() - t) / 60, 2)}</m>分钟")
 
 
 @DRIVER.on_startup

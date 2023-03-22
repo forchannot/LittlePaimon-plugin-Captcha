@@ -108,6 +108,8 @@ async def handle_ssbq(player: Player, sign_allow: bool):
                         False,
                     )
                     return f"{player.uid}绘制图片失败，{e}"
+            else:
+                return f"{player.uid}遇验证码阻拦，需手动前往米游社进行验证后才能继续使用\n"
         else:
             return f"{player.uid}遇验证码阻拦，需手动前往米游社进行验证后才能继续使用\n"
     elif data["retcode"] != 0:
