@@ -119,18 +119,19 @@ async def mhy_bbs_sign(
                         gt, challenge, SIGN_ACTION_API, config.qd_ch
                     )
                     if validate != "j" and challeng != "j":
-                        #delay = random.randint(5, 15)
+                        # delay = random.randint(5, 15)
                         Header["x-rpc-challenge"] = challeng
                         Header["x-rpc-validate"] = validate
                         Header["x-rpc-seccode"] = f"{validate}|jordan"
-                        #logger.info(
+                        # logger.info(
                         #    f"米游社[验证]签到,用户{user_id},UID:{uid}已获取验证码，等待时间{delay}秒", True
-                        #)
-                        #await asyncio.sleep(delay)
+                        # )
+                        # await asyncio.sleep(delay)
                     else:
                         delay = 300 + random.randint(1, 30)
                         logger.info(
-                            f"米游社[验证]签到,用户{user_id},UID:{uid}未获取验证码，等待时间{delay}秒", True
+                            f"米游社[验证]签到,用户{user_id},UID:{uid}未获取验证码，等待时间{delay}秒",
+                            result_type=False,
                         )
                         await asyncio.sleep(delay)
                     continue
