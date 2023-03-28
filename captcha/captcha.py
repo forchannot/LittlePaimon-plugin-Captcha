@@ -164,14 +164,13 @@ async def get_validate(gt: str, challenge: str, referer: str, choose: str):
 
 
 async def other_api(gt: str, challenge: str):
-    try:
-        response = await aiorequests.get(
-            url=f"{config.third_api}gt={gt}&challenge={challenge}", timeout=60
-        )
-        data = response.json()
-    except Exception as e:
-        logger.info(f"[第三方]请求失败{e}")
+    response = await aiorequests.get(
+        url=f"{config.third_api}gt={gt}&challenge={challenge}", timeout=60
+    )
+    if response.status_code != 200:
+        logger.info(f"[第三方]请求失败")
         return "j", "j"
+    data = response.json()
     if "data" in data and "validate" in data["data"]:
         logger.info("[第三方]成功")
         validate, challenge = data["data"]["validate"], data["data"]["challenge"]
@@ -192,16 +191,15 @@ async def rrocr(gt: str, challenge: str, referer: str):
         "referer": referer,
         "sharecode": "585dee4d4ef94e1cb95d5362a158ea54",
     }
-    try:
-        response = await aiorequests.post(
-            url="http://api.rrocr.com/api/recognize.html",
-            params=params,
-            timeout=60,
-        )
-        data = response.json()
-    except Exception as e:
-        logger.info(f"人人打码请求失败:{e}")
+    response = await aiorequests.post(
+        url="http://api.rrocr.com/api/recognize.html",
+        params=params,
+        timeout=60,
+    )
+    if response.status_code != 200:
+        logger.info(f"人人打码请求失败")
         return "j", "j"
+    data = response.json()
     if "data" in data and "validate" in data["data"]:
         validate, challenge = data["data"]["validate"], data["data"]["challenge"]
         return validate, challenge
@@ -222,32 +220,36 @@ async def ttocr(gt: str, challenge: str, referer: str):
         "itemid": 388,
         "referer": referer,
     }
-    try:
-        get_id = await aiorequests.post(
-            "http://api.ttocr.com/api/recognize",
-            data=data,
-            timeout=60,
-        )
-        get_id = get_id.json()
-    except Exception as e:
-        logger.info(f"套套打码验证请求失败:{e}")
+    get_id = await aiorequests.post(
+        "http://api.ttocr.com/api/recognize",
+        data=data,
+        timeout=60,
+    )
+    if get_id.status_code != 200:
+        logger.info(f"套套打码验证请求失败")
         return "j", "j"
+    get_id = get_id.json()
     result_id = get_id["resultid"]
     logger.info("等待15s获取结果")
     await asyncio.sleep(15)
-    try:
-        res = await aiorequests.post(
-            url="http://api.ttocr.com/api/results",
-            data={
-                "appkey": config.ttocr_key,
-                "resultid": result_id,
-            },
-            timeout=60,
-        )
-        res = res.json()
-    except Exception as e:
-        logger.info(f"套套打码结果获取请求失败:{e}")
+    res = await aiorequests.post(
+        url="http://api.ttocr.com/api/results",
+        data={
+            "appkey": config.ttocr_key,
+            "resultid": result_id,
+        },
+        timeout=60,
+    )
+    for i in range(3):
+        if res.status_code == 200:
+            break
+        else:
+            logger.info(f"套套打码获取结果第{1+1}请求失败，等待1.5s后重试")
+            await asyncio.sleep(1.5)
+    else:
+        logger.info(f"套套打码获取结果请求失败,可能是网络问题")
         return "j", "j"
+    res = res.json()
     if "data" in res and "validate" in res["data"]:
         validate, challenge = res["data"]["validate"], res["data"]["challenge"]
         return validate, challenge
