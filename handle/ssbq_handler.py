@@ -12,9 +12,10 @@ from nonebot.params import CommandArg, Depends
 from ..draw.ssbq_draw import draw_daily_note_card
 from ..captcha.captcha import get_pass_challenge, mihoyo_headers
 from ..config.config import config
+from ..utils.logger import Logger
 
 from LittlePaimon.database import DailyNoteSub, Player, LastQuery, PrivateCookie
-from LittlePaimon.utils import logger, scheduler
+from LittlePaimon.utils import scheduler
 from LittlePaimon.utils.api import get_mihoyo_private_data, DAILY_NOTE_API
 from LittlePaimon.utils.requests import aiorequests
 
@@ -52,9 +53,9 @@ async def handle_ssbq(player: Player, sign_allow: bool):
     await LastQuery.update_last_query(player.user_id, player.uid)
     data = await get_mihoyo_private_data(player.uid, player.user_id, "daily_note")
     if isinstance(data, str):
-        logger.info(
+        Logger.info(
             "原神实时便签",
-            "➤",
+            "➤➤",
             {"用户": player.user_id, "UID": player.uid},
             f"获取数据失败, {data}",
             False,
@@ -62,9 +63,9 @@ async def handle_ssbq(player: Player, sign_allow: bool):
         return f"{player.uid}{data}\n"
     elif data["retcode"] == 1034:
         if (config.rrocr_key or config.third_api or config.ttocr_key) and sign_allow:
-            logger.info(
+            Logger.info(
                 "原神实时便签",
-                "➤",
+                "➤➤",
                 {"用户": player.user_id, "UID": player.uid},
                 "获取数据失败，状态码为1034，疑似验证码",
                 False,
@@ -91,16 +92,15 @@ async def handle_ssbq(player: Player, sign_allow: bool):
                     img = await draw_daily_note_card(
                         data["data"], player.uid, player.user_id
                     )
-                    logger.info(
+                    Logger.info(
                         "原神实时便签",
                         "➤➤",
                         {"用户": player.user_id, "UID": player.uid},
                         "绘制图片成功",
-                        True,
                     )
                     return img
                 except Exception as e:
-                    logger.info(
+                    Logger.info(
                         "原神实时便签",
                         "➤➤",
                         {"用户": player.user_id, "UID": player.uid},
@@ -113,31 +113,28 @@ async def handle_ssbq(player: Player, sign_allow: bool):
         else:
             return f"{player.uid}遇验证码阻拦，需手动前往米游社进行验证后才能继续使用\n"
     elif data["retcode"] != 0:
-        logger.info(
+        Logger.info(
             "原神实时便签",
-            "➤",
+            "➤➤",
             {"用户": player.user_id, "UID": player.uid},
             f'获取数据失败，code为{data["retcode"]}， msg为{data["message"]}',
             False,
         )
         return f'{player.uid}获取数据失败，msg为{data["message"]}\n'
     else:
-        logger.info(
-            "原神实时便签", "➤", {"用户": player.user_id, "UID": player.uid}, "获取数据成功", True
-        )
+        Logger.info("原神实时便签", "➤➤", {"用户": player.user_id, "UID": player.uid}, "获取数据成功")
 
         try:
             img = await draw_daily_note_card(data["data"], player.uid, player.user_id)
-            logger.info(
+            Logger.info(
                 "原神实时便签",
                 "➤➤",
                 {"用户": player.user_id, "UID": player.uid},
                 "绘制图片成功",
-                True,
             )
             return img
         except Exception as e:
-            logger.info(
+            Logger.info(
                 "原神实时便签",
                 "➤➤",
                 {"用户": player.user_id, "UID": player.uid},
@@ -157,7 +154,7 @@ async def check_note():
     if not (subs := await DailyNoteSub.all()):
         return
     time_now = time.time()
-    logger.info(
+    Logger.info(
         "原神实时便签",
         f"开始执行定时检查，共<m>{len(subs)}</m>个任务，预计花费<m>{round(6 * len(subs) / 60, 2)}</m>分钟",
     )
@@ -179,9 +176,9 @@ async def check_note():
                 sub.uid, str(sub.user_id), "daily_note"
             )
             if isinstance(data, str):
-                logger.info(
+                Logger.info(
                     "原神实时便签",
-                    "➤",
+                    "➤➤",
                     {"用户": sub.user_id, "UID": sub.uid},
                     "Cookie未绑定或已失效，删除任务",
                     False,
@@ -198,7 +195,7 @@ async def check_note():
                             message=f"你的UID{sub.uid}未绑定Cookie或已失效，无法继续为你检查实时便签",
                         )
                 except Exception as e:
-                    logger.info(
+                    Logger.info(
                         "原神实时便签",
                         "➤➤",
                         {"用户": sub.user_id, "UID": sub.uid},
@@ -209,15 +206,15 @@ async def check_note():
             elif data["retcode"] == 1034:
                 logger.info(
                     "原神实时便签",
-                    "➤",
+                    "➤➤",
                     {"用户": sub.user_id, "UID": sub.uid},
                     "获取数据失败，状态码为1034， 疑似验证码",
                     False,
                 )
             elif data["retcode"] != 0:
-                logger.info(
+                Logger.info(
                     "原神实时便签",
-                    "➤",
+                    "➤➤",
                     {"用户": sub.user_id, "UID": sub.uid},
                     f'获取数据失败，状态码为{data["retcode"]}， msg为{data["message"]}',
                     False,
@@ -237,20 +234,18 @@ async def check_note():
                     result += f'银币达到了{str(data["data"]["current_home_coin"])}，'
                     result_log += "银币"
                 if result_log:
-                    logger.info(
+                    Logger.info(
                         "原神实时便签",
-                        "➤",
+                        "➤➤",
                         {"用户": sub.user_id, "UID": sub.uid},
                         f"{result_log}达到了阈值，发送提醒",
-                        True,
                     )
                 else:
-                    logger.info(
+                    Logger.info(
                         "原神实时便签",
                         "➤➤",
                         {"用户": sub.user_id, "UID": sub.uid},
                         "检查完成，未达到阈值",
-                        True,
                     )
                 if result:
                     sub.last_remind_time = datetime.datetime.now()
@@ -268,7 +263,7 @@ async def check_note():
                                 message=f"⚠️你的UID{sub.uid}{result}记得清理哦⚠️",
                             )
                     except Exception as e:
-                        logger.info(
+                        Logger.info(
                             "原神实时便签",
                             "➤➤",
                             {"用户": sub.user_id, "UID": sub.uid},
@@ -277,6 +272,6 @@ async def check_note():
                         )
                 # 等待一会再检查下一个，防止检查过快
                 await asyncio.sleep(random.randint(4, 8))
-    logger.info(
+    Logger.info(
         "原神实时便签", f"树脂检查完成，共花费<m>{round((time.time() - time_now) / 60, 2)}</m>分钟"
     )

@@ -23,7 +23,7 @@
   * [丨💸鸣谢](#丨鸣谢)
 
   * [丨 其他插件(~~推销~~)](#丨-其他插件--推销-)
-  <!-- TOC -->
+    <!-- TOC -->
 
   TIPS:**本项目仅用于学习和交流，请于下载后的24小时内删除**
 ## 丨简介
@@ -37,7 +37,7 @@
 
 ## | 安装方法和注意事项
 #### |安装方法：
-方法1、将本项目直接clone或者下载压缩包到小派蒙根目录（也就是和`bot.py`同级目录下），在`bot.py`文件中找到`nonebot.load_plugin("LittlePaimon")`这一行，在这一行的下面添加`nonebot.load_plugin("LittlePaimon-plugin-Captcha")`即可
+方法1、将本项目直接clone或者下载压缩包到小派蒙根目录（也就是和`bot.py`同级目录下），在`bot.py`文件中找到`nonebot.load_plugin("LittlePaimon")`这一行，在这一行的**下面**添加`nonebot.load_plugin("LittlePaimon-plugin-Captcha")`即可
 
 方法2、将本项目直接clone或者下载压缩包到`LittlePaimon\plugins\`内即可
 
@@ -106,5 +106,4 @@ ssbq打码平台: rr
 [定时更改群名片](https://github.com/forchannot/nonebot_plugin_rename)
 
 [原神历史卡池信息](https://github.com/forchannot/nonebot-plugin-gshisbanner)
-
 

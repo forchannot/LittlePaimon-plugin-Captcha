@@ -7,10 +7,10 @@ from .handle.ssbq_handler import handle_ssbq, SubList, get_subs
 from .handle.coin_handle import mhy_bbs_coin, bbs_auto_coin
 from .handle.sign_handle import mhy_bbs_sign, bbs_auto_sign
 from .config.config import config
+from .utils.logger import Logger
 from .web import web_api, web_page
 
 from LittlePaimon.database import MihoyoBBSSub, PrivateCookie, DailyNoteSub
-from LittlePaimon.utils import logger
 from LittlePaimon.utils.message import CommandPlayer, CommandUID, CommandSwitch
 
 from nonebot import on_command, Bot
@@ -110,6 +110,7 @@ ssbq_sub = on_command(
     },
 )
 get_num = on_command("查询积分", aliases={"查询剩余", "查询剩余积分"}, permission=SUPERUSER)
+
 signing_list = []
 coin_getting_list = []
 ssbq_list = []
@@ -128,19 +129,17 @@ async def _(
             await sign.finish("你已经在执行签到任务中，请勿重复发送", at_sender=True)
         else:
             await sign.send(f"开始为UID{uid}执行米游社签到，耗时较长，请稍等...", at_sender=True)
-            logger.info(
-                "米游社原神签到", "", {"user_id": event.user_id, "uid": uid, "执行签到": ""}
-            )
+            Logger.info("原神签到", "", {"user_id": event.user_id, "uid": uid, "执行签到": ""})
             signing_list.append(f"{event.user_id}-{uid}")
             judgment = isinstance(event, GroupMessageEvent)
             if judgment and event.group_id in config.group_allow_list:
-                logger.info(f"{event.group_id}在白名单内,开始执行验证签到")
+                Logger.info(f"{event.group_id}在白名单内,开始执行验证签到")
                 _, result = await mhy_bbs_sign(True, str(event.user_id), uid)
             elif event.user_id in config.member_allow_list:
-                logger.info(f"{event.user_id}在白名单内,开始执行验证签到")
+                Logger.info(f"{event.user_id}在白名单内,开始执行验证签到")
                 _, result = await mhy_bbs_sign(True, str(event.user_id), uid)
             else:
-                logger.info(f"{event.user_id}不在白名单内,开始执行普通签到")
+                Logger.info(f"{event.user_id}不在白名单内,开始执行普通签到")
                 _, result = await mhy_bbs_sign(False, str(event.user_id), uid)
             signing_list.remove(f"{event.user_id}-{uid}")
             await sign.finish(result, at_sender=True)
@@ -157,8 +156,8 @@ async def _(
                         else event.user_id
                     },
                 )
-                logger.info(
-                    "米游社原神签到", "", {"user_id": event.user_id, "uid": uid}, "开启成功", True
+                Logger.info(
+                    "米游社原神签到", "", {"user_id": event.user_id, "uid": uid}, "开启成功"
                 )
                 await sign.finish(f"UID{uid}开启米游社原神自动签到成功", at_sender=True)
             else:
@@ -167,8 +166,8 @@ async def _(
             # switch为关闭，则取消订阅
             if sub := await MihoyoBBSSub.get_or_none(**sub_data):
                 await sub.delete()
-                logger.info(
-                    "米游社原神签到", "", {"user_id": event.user_id, "uid": uid}, "关闭成功", True
+                Logger.info(
+                    "米游社原神签到", "", {"user_id": event.user_id, "uid": uid}, "关闭成功"
                 )
                 await sign.finish(f"UID{uid}关闭米游社原神自动签到成功", at_sender=True)
             else:
@@ -197,19 +196,19 @@ async def _(
             await get_coin.finish("你已经在执行米游币获取任务中，请勿重复发送", at_sender=True)
         else:
             await get_coin.send(f"开始为UID{uid}执行米游币获取，耗时较久，请稍等...", at_sender=True)
-            logger.info(
+            Logger.info(
                 "米游币自动获取", "", {"user_id": event.user_id, "uid": uid, "执行获取": ""}
             )
             coin_getting_list.append(f"{event.user_id}-{uid}")
             judgment = isinstance(event, GroupMessageEvent)
             if judgment and event.group_id in config.group_allow_list:
-                logger.info(f"{event.group_id}在白名单内,开始执行验证获取")
+                Logger.info(f"{event.group_id}在白名单内,开始执行验证获取")
                 result = await mhy_bbs_coin(True, str(event.user_id), uid)
             elif event.user_id in config.member_allow_list:
-                logger.info(f"{event.user_id}在白名单内,开始执行验证获取")
+                Logger.info(f"{event.user_id}在白名单内,开始执行验证获取")
                 result = await mhy_bbs_coin(True, str(event.user_id), uid)
             else:
-                logger.info(f"{event.user_id}不在白名单内,开始执行普通获取")
+                Logger.info(f"{event.user_id}不在白名单内,开始执行普通获取")
                 result = await mhy_bbs_coin(False, str(event.user_id), uid)
             coin_getting_list.remove(f"{event.user_id}-{uid}")
             await get_coin.finish(result, at_sender=True)
@@ -230,8 +229,8 @@ async def _(
                         else event.user_id
                     },
                 )
-                logger.info(
-                    "米游币自动获取", "", {"user_id": event.user_id, "uid": uid}, "开启成功", True
+                Logger.info(
+                    "米游币自动获取", "", {"user_id": event.user_id, "uid": uid}, "开启成功"
                 )
                 await sign.finish(f"UID{uid}开启米游币自动获取成功", at_sender=True)
             else:
@@ -243,8 +242,8 @@ async def _(
             # switch为关闭，则取消订阅
             if sub := await MihoyoBBSSub.get_or_none(**sub_data):
                 await sub.delete()
-                logger.info(
-                    "米游币自动获取", "", {"user_id": event.user_id, "uid": uid}, "关闭成功", True
+                Logger.info(
+                    "米游币自动获取", "", {"user_id": event.user_id, "uid": uid}, "关闭成功"
                 )
                 await sign.finish(f"UID{uid}关闭米游币自动获取成功", at_sender=True)
             else:
@@ -273,7 +272,7 @@ async def _(
         if f"{event.user_id}-{player.uid}" in ssbq_list:
             await ssbq.finish("你已经在查询体力任务中，请勿重复发送", at_sender=True)
         else:
-            logger.info("原神实时便签", "开始执行查询")
+            Logger.info("原神实时便签", "开始执行查询")
             ssbq_list.append(f"{event.user_id}-{player.uid}")
             judgment = isinstance(event, GroupMessageEvent)
             if judgment and event.group_id in config.group_allow_list:
@@ -307,7 +306,7 @@ async def _(
         sub_data["group_id"] = event.group_id
     if switch is None or switch:
         await DailyNoteSub.update_or_create(**sub_data, defaults=subs)
-        logger.info("原神实时便笺", "", sub_data.update(subs), "添加提醒成功", True)
+        Logger.info("原神实时便笺", "", sub_data.update(subs), "添加提醒成功")
         subs_info = await get_subs(**sub_data)
         await ssbq_sub.finish(f"开启提醒成功，{subs_info}", at_sender=True)
     else:
@@ -331,10 +330,8 @@ async def _(event: PrivateMessageEvent, arg: Message = CommandArg()):
     url_to_key = {
         "人人": "rr",
         "rr": "rr",
-        "renren": "rr",
-        "路路": "ll",
-        "小灰灰": "ll",
-        "ll": "ll",
+        "sf": "sf",
+        "三方": "sf",
         "tt": "tt",
         "套套": "tt",
     }
@@ -344,10 +341,10 @@ async def _(event: PrivateMessageEvent, arg: Message = CommandArg()):
         if key != "other":
             result = await gain_num(key)
             result = "剩余" + result
-            if result:
+            if result is not None:
                 await get_num.finish(result, at_sender=True)
             else:
-                await get_num.finish("请求失败，请检查 key 是否失效或填写错误", at_sender=True)
+                await get_num.finish("请求失败，请检查key是否失效或填写错误或网络问题", at_sender=True)
         else:
             await get_num.finish("没有这种平台", at_sender=True)
     else:
