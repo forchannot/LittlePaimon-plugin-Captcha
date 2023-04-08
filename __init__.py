@@ -23,11 +23,11 @@ from nonebot.rule import to_me
 
 __plugin_meta__ = PluginMetadata(
     name="加强小派蒙验证",
-    description="为签到，体力提供验证",
+    description="为签到，米游币，体力提供验证",
     usage="加强小派蒙验证",
     extra={
         "author": "forchannot",
-        "version": "1.0",
+        "version": "2.0",
         "priority": 7,
     },
 )
@@ -35,8 +35,8 @@ __plugin_meta__ = PluginMetadata(
 
 sign = on_command(
     "mys签到",
-    aliases={"米游社签到", "mys自动签到", "米游社自动签到"},
-    priority=8,
+    aliases={"米游社签到", "mys自动签到", "米游社自动签到", "原神签到"},
+    priority=2,
     block=True,
     state={
         "pm_name": "米游社签到",
@@ -47,8 +47,8 @@ sign = on_command(
 )
 all_sign = on_command(
     "全部重签",
-    aliases={"mys全部重签", "米游社全部重签"},
-    priority=8,
+    aliases={"mys全部重签", "米游社全部重签", "原神全部重签"},
+    priority=2,
     block=True,
     permission=SUPERUSER,
     rule=to_me(),
@@ -62,7 +62,7 @@ all_sign = on_command(
 get_coin = on_command(
     "myb获取",
     aliases={"米游币获取", "myb自动获取", "米游币自动获取", "米游币任务"},
-    priority=8,
+    priority=2,
     block=True,
     state={
         "pm_name": "米游币获取",
@@ -74,7 +74,7 @@ get_coin = on_command(
 all_coin = on_command(
     "myb全部重做",
     aliases={"米游币全部重做"},
-    priority=8,
+    priority=2,
     block=True,
     permission=SUPERUSER,
     rule=to_me(),
@@ -88,7 +88,7 @@ all_coin = on_command(
 ssbq = on_command(
     "ssbq",
     aliases={"实时便笺", "实时便签", "当前树脂", "体力", "查询体力"},
-    priority=9,
+    priority=2,
     block=True,
     state={
         "pm_name": "ssbq",
@@ -100,7 +100,7 @@ ssbq = on_command(
 ssbq_sub = on_command(
     "ssbq提醒",
     aliases={"实时便笺提醒", "实时便签提醒", "当前树脂提醒"},
-    priority=9,
+    priority=2,
     block=True,
     state={
         "pm_name": "ssbq提醒",
@@ -129,17 +129,17 @@ async def _(
             await sign.finish("你已经在执行签到任务中，请勿重复发送", at_sender=True)
         else:
             await sign.send(f"开始为UID{uid}执行米游社签到，耗时较长，请稍等...", at_sender=True)
-            Logger.info("原神签到", "", {"user_id": event.user_id, "uid": uid, "执行签到": ""})
+            Logger.info("原神签到", "开始为", {"用户": event.user_id, "uid": uid, "执行签到": ""})
             signing_list.append(f"{event.user_id}-{uid}")
             judgment = isinstance(event, GroupMessageEvent)
             if judgment and event.group_id in config.group_allow_list:
-                Logger.info(f"{event.group_id}在白名单内,开始执行验证签到")
+                Logger.info(f"群聊{event.group_id}在白名单内,开始执行验证签到")
                 _, result = await mhy_bbs_sign(True, str(event.user_id), uid)
             elif event.user_id in config.member_allow_list:
-                Logger.info(f"{event.user_id}在白名单内,开始执行验证签到")
+                Logger.info(f"用户{event.user_id}在白名单内,开始执行验证签到")
                 _, result = await mhy_bbs_sign(True, str(event.user_id), uid)
             else:
-                Logger.info(f"{event.user_id}不在白名单内,开始执行普通签到")
+                Logger.info(f"用户{event.user_id}不在白名单内,开始执行普通签到")
                 _, result = await mhy_bbs_sign(False, str(event.user_id), uid)
             signing_list.remove(f"{event.user_id}-{uid}")
             await sign.finish(result, at_sender=True)
@@ -197,18 +197,18 @@ async def _(
         else:
             await get_coin.send(f"开始为UID{uid}执行米游币获取，耗时较久，请稍等...", at_sender=True)
             Logger.info(
-                "米游币自动获取", "", {"user_id": event.user_id, "uid": uid, "执行获取": ""}
+                "米游币自动获取", "开始为", {"用户": event.user_id, "uid": uid, "执行获取": ""}
             )
             coin_getting_list.append(f"{event.user_id}-{uid}")
             judgment = isinstance(event, GroupMessageEvent)
             if judgment and event.group_id in config.group_allow_list:
-                Logger.info(f"{event.group_id}在白名单内,开始执行验证获取")
+                Logger.info(f"群聊{event.group_id}在白名单内,开始执行验证获取")
                 result = await mhy_bbs_coin(True, str(event.user_id), uid)
             elif event.user_id in config.member_allow_list:
-                Logger.info(f"{event.user_id}在白名单内,开始执行验证获取")
+                Logger.info(f"用户{event.user_id}在白名单内,开始执行验证获取")
                 result = await mhy_bbs_coin(True, str(event.user_id), uid)
             else:
-                Logger.info(f"{event.user_id}不在白名单内,开始执行普通获取")
+                Logger.info(f"用户{event.user_id}不在白名单内,开始执行普通获取")
                 result = await mhy_bbs_coin(False, str(event.user_id), uid)
             coin_getting_list.remove(f"{event.user_id}-{uid}")
             await get_coin.finish(result, at_sender=True)
