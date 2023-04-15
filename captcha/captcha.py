@@ -163,9 +163,13 @@ async def get_validate(gt: str, challenge: str, referer: str, choose: str):
 
 
 async def other_api(gt: str, challenge: str):
-    response = await aiorequests.get(
-        url=f"{config.third_api}gt={gt}&challenge={challenge}", timeout=60
-    )
+    try:
+        response = await aiorequests.get(
+            url=f"{config.third_api}gt={gt}&challenge={challenge}", timeout=60
+        )
+    except Exception as e:
+        Logger.info("[第三方]", info="➤➤", result=f"请求失败{e}", result_type=False)
+        return "j", "j"
     if response.status_code != 200:
         Logger.info("[第三方]", info="➤➤", result="请求失败", result_type=False)
         return "j", "j"
@@ -190,11 +194,15 @@ async def rrocr(gt: str, challenge: str, referer: str):
         "referer": referer,
         "sharecode": "585dee4d4ef94e1cb95d5362a158ea54",
     }
-    response = await aiorequests.post(
-        url="http://api.rrocr.com/api/recognize.html",
-        params=params,
-        timeout=60,
-    )
+    try:
+        response = await aiorequests.post(
+            url="http://api.rrocr.com/api/recognize.html",
+            params=params,
+            timeout=60,
+        )
+    except Exception as e:
+        Logger.info("人人打码", info="➤➤", result=f"请求失败{e}", result_type=False)
+        return "j", "j"
     if response.status_code != 200:
         Logger.info("人人打码", info="➤➤", result="请求失败", result_type=False)
         return "j", "j"
@@ -221,11 +229,15 @@ async def ttocr(gt: str, challenge: str, referer: str):
         "itemid": 388,
         "referer": referer,
     }
-    get_id = await aiorequests.post(
-        "http://api.ttocr.com/api/recognize",
-        data=data,
-        timeout=60,
-    )
+    try:
+        get_id = await aiorequests.post(
+            url="http://api.ttocr.com/api/recognize",
+            data=data,
+            timeout=60,
+        )
+    except Exception as e:
+        Logger.info("套套打码", info="➤➤", result=f"请求失败{e}", result_type=False)
+        return "j", "j"
     if get_id.status_code != 200:
         Logger.info("套套打码", info="➤➤", result="验证失败", result_type=False)
         return "j", "j"
@@ -233,15 +245,20 @@ async def ttocr(gt: str, challenge: str, referer: str):
     result_id = get_id["resultid"]
     Logger.info("套套打码", info="➤➤", result="等待15s获取结果", result_type=True)
     await asyncio.sleep(15)
-    res = await aiorequests.post(
-        url="http://api.ttocr.com/api/results",
-        data={
-            "appkey": config.ttocr_key,
-            "resultid": result_id,
-        },
-        timeout=60,
-    )
     for i in range(3):
+        try:
+            res = await aiorequests.post(
+                url="http://api.ttocr.com/api/results",
+                data={
+                    "appkey": config.ttocr_key,
+                    "resultid": result_id,
+                },
+                timeout=60,
+            )
+        except Exception as e:
+            Logger.info("套套打码", info="➤➤", result=f"第{1+1}请求失败{e}", result_type=False)
+            await asyncio.sleep(1.5)
+            continue
         if res.status_code == 200:
             break
         else:
@@ -266,9 +283,13 @@ async def ttocr(gt: str, challenge: str, referer: str):
 
 async def gain_num(choice):
     if choice == "rr" and config.rrocr_key:
-        data = await aiorequests.get(
-            f"http://api.rrocr.com/api/integral.html?appkey={config.rrocr_key}"
-        )
+        try:
+            data = await aiorequests.get(
+                f"http://api.rrocr.com/api/integral.html?appkey={config.rrocr_key}"
+            )
+        except Exception as e:
+            Logger.info("人人打码", info="➤➤", result=f"请求失败{e}", result_type=False)
+            return None
         if data.status_code != 200:
             return None
         data = data.json()
@@ -278,9 +299,13 @@ async def gain_num(choice):
         else:
             return None
     elif choice == "sf" and config.third_api:
-        data = await aiorequests.get(
-            url=config.third_api.replace("geetest", "token")
-        )
+        try:
+            data = await aiorequests.get(
+                url=config.third_api.replace("geetest", "token")
+            )
+        except Exception as e:
+            Logger.info("[第三方]", info="➤➤", result=f"请求失败{e}", result_type=False)
+            return None
         if data.status_code != 200:
             return None
         data = data.json()
@@ -288,9 +313,13 @@ async def gain_num(choice):
             key_num = data["times"]
             return 2333 - key_num
     elif choice == "tt" and config.ttocr_key:
-        data = await aiorequests.get(
-            url=f"http://api.ttocr.com/api/points?appkey={config.ttocr_key}"
-        )
+        try:
+            data = await aiorequests.get(
+                url=f"http://api.ttocr.com/api/points?appkey={config.ttocr_key}"
+            )
+        except Exception as e:
+            Logger.info("套套打码", info="➤➤", result=f"请求失败{e}", result_type=False)
+            return None
         if data.status_code != 200:
             return None
         data = data.json()
