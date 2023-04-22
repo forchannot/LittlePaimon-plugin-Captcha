@@ -260,6 +260,9 @@ async def ttocr(gt: str, challenge: str, referer: str):
             await asyncio.sleep(1.5)
             continue
         if res.status_code == 200:
+            if "msg" in res.json() and res.json()["msg"] == "等待识别结果":
+                await asyncio.sleep(1.5)
+                continue
             break
         else:
             Logger.info(
