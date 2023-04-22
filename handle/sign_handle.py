@@ -244,9 +244,13 @@ async def bbs_auto_sign():
                 }
             )
         if result == SignResult.DONE:
-            await asyncio.sleep(random.randint(5, 10))
+            sleep_time = random.randint(5, 10)
+            Logger.info("原神签到", "➤➤", {"用户": sub.user_id, "UID": sub.uid}, f"签到过了,等待{sleep_time}秒执行下一个用户")
+            await asyncio.sleep(sleep_time)
         else:
-            await asyncio.sleep(random.randint(60, 90))
+            sleep_time = random.randint(60, 90)
+            Logger.info("原神签到", "➤➤", {"用户": sub.user_id, "UID": sub.uid}, f"执行完毕,等待{sleep_time}秒执行下一个用户")
+            await asyncio.sleep(sleep_time)
 
     Logger.info("原神签到", "➤➤", result="全部执行完毕,开始处理群结果")
     for group_id, sign_result in sign_result_group.items():

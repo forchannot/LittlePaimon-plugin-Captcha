@@ -378,7 +378,9 @@ async def bbs_auto_coin():
                     "msg": result,
                 }
             )
-        await asyncio.sleep(random.randint(15, 25))
+        sleep_time = random.randint(5, 10)
+        Logger.info("米游币获取", "➤➤", {"用户": sub.user_id, "UID": sub.uid}, f"执行完毕,等待{sleep_time}秒执行下一个用户")
+        await asyncio.sleep(sleep_time)
 
     for group_id, result_list in coin_result_group.items():
         result_num = len(result_list)

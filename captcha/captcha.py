@@ -245,7 +245,7 @@ async def ttocr(gt: str, challenge: str, referer: str):
     result_id = get_id["resultid"]
     Logger.info("套套打码", info="➤➤", result="等待15s获取结果", result_type=True)
     await asyncio.sleep(15)
-    for i in range(3):
+    for i in range(5):
         try:
             res = await aiorequests.post(
                 url="http://api.ttocr.com/api/results",
