@@ -4,7 +4,7 @@ import json
 import random
 import string
 import time
-from typing import Union
+from typing import Union, Optional
 
 from LittlePaimon.database import PrivateCookie
 from LittlePaimon.utils.api import (
@@ -55,7 +55,9 @@ def mihoyo_headers(cookie, challenge, q="", b=None) -> dict:
 
 async def get_sign_list() -> dict:
     req = await aiorequests.get(
-        url=SIGN_REWARD_API, headers=_HEADER, params={"act_id": "e202009291139501"}
+        url=SIGN_REWARD_API,
+        headers=_HEADER,
+        params={"act_id": "e202009291139501"},
     )
     data = req.json()
     return data
@@ -115,7 +117,9 @@ async def get_pass_challenge(uid: str, user_id: str, way: str):
         "x-rpc-channel": "miyousheluodi",
         "x-rpc-device_id": random_hex(32),
         "x-rpc-device_name": "".join(
-            random.sample(string.ascii_lowercase + string.digits, random.randint(1, 10))
+            random.sample(
+                string.ascii_lowercase + string.digits, random.randint(1, 10)
+            )
         ),
         "x-rpc-device_model": "Mi 10",
         "Referer": "https://app.mihoyo.com",
@@ -176,7 +180,10 @@ async def other_api(gt: str, challenge: str):
     data = response.json()
     if "data" in data and "validate" in data["data"]:
         Logger.info("[第三方]", info="➤➤", result="成功", result_type=True)
-        validate, challenge = data["data"]["validate"], data["data"]["challenge"]
+        validate, challenge = (
+            data["data"]["validate"],
+            data["data"]["challenge"],
+        )
         return validate, challenge
     else:
         return "j", "j"
@@ -208,7 +215,10 @@ async def rrocr(gt: str, challenge: str, referer: str):
         return "j", "j"
     data = response.json()
     if "data" in data and "validate" in data["data"]:
-        validate, challenge = data["data"]["validate"], data["data"]["challenge"]
+        validate, challenge = (
+            data["data"]["validate"],
+            data["data"]["challenge"],
+        )
         return validate, challenge
     else:
         Logger.info(
@@ -256,7 +266,9 @@ async def ttocr(gt: str, challenge: str, referer: str):
                 timeout=60,
             )
         except Exception as e:
-            Logger.info("套套打码", info="➤➤", result=f"第{1+1}请求失败{e}", result_type=False)
+            Logger.info(
+                "套套打码", info="➤➤", result=f"第{1+1}请求失败{e}", result_type=False
+            )
             await asyncio.sleep(1.5)
             continue
         if res.status_code == 200:
@@ -266,11 +278,16 @@ async def ttocr(gt: str, challenge: str, referer: str):
             break
         else:
             Logger.info(
-                "套套打码", info="➤➤", result=f"获取结果第{1+1}请求失败，等待1.5s后重试", result_type=False
+                "套套打码",
+                info="➤➤",
+                result=f"获取结果第{1+1}请求失败，等待1.5s后重试",
+                result_type=False,
             )
             await asyncio.sleep(1.5)
     else:
-        Logger.info("套套打码", info="➤➤", result="请求失败,可能是网络原因", result_type=False)
+        Logger.info(
+            "套套打码", info="➤➤", result="请求失败,可能是网络原因", result_type=False
+        )
         return "j", "j"
     res = res.json()
     # 失败返回'j' 成功返回validate
@@ -284,51 +301,40 @@ async def ttocr(gt: str, challenge: str, referer: str):
         return "j", "j"
 
 
-async def gain_num(choice):
-    if choice == "rr" and config.rrocr_key:
-        try:
-            data = await aiorequests.get(
-                f"http://api.rrocr.com/api/integral.html?appkey={config.rrocr_key}"
-            )
-        except Exception as e:
-            Logger.info("人人打码", info="➤➤", result=f"请求失败{e}", result_type=False)
+async def gain_num(choice) -> Optional[str]:
+    options = {
+        "rr": {
+            "url": f"http://api.rrocr.com/api/integral.html?appkey={config.rrocr_key}",
+            "info_key": "integral",
+            "success_info": ["status", 0],
+        },
+        "sf": {
+            "url": config.third_api.replace("geetest", "token"),
+            "info_key": "times",
+            "success_info": ["info", "success"],
+        },
+        "tt": {
+            "url": f"http://api.ttocr.com/api/points?appkey={config.ttocr_key}",
+            "info_key": "points",
+            "success_info": ["status", 1],
+        },
+    }
+    option = options.get(choice)
+    info = option.get("info_key")
+    success = option.get("success_info")
+    try:
+        data = await aiorequests.get(option.get("url"))
+    except Exception as e:
+        Logger.info(
+            f"{choice}打码查询积分", info="➤➤", result=f"请求失败{e}", result_type=False
+        )
+        return None
+    if data.status_code != 200:
+        return None
+    data = data.json()
+    if data.get(success[0]) == success[1]:
+        key_num = data.get(info, None)
+        if key_num is None:
             return None
-        if data.status_code != 200:
-            return None
-        data = data.json()
-        if data["status"] == 0:
-            key_num = data["integral"]
-            return key_num
-        else:
-            return None
-    elif choice == "sf" and config.third_api:
-        try:
-            data = await aiorequests.get(
-                url=config.third_api.replace("geetest", "token")
-            )
-        except Exception as e:
-            Logger.info("[第三方]", info="➤➤", result=f"请求失败{e}", result_type=False)
-            return None
-        if data.status_code != 200:
-            return None
-        data = data.json()
-        if data["info"] == "success":
-            key_num = data["times"]
-            return 2333 - key_num
-    elif choice == "tt" and config.ttocr_key:
-        try:
-            data = await aiorequests.get(
-                url=f"http://api.ttocr.com/api/points?appkey={config.ttocr_key}"
-            )
-        except Exception as e:
-            Logger.info("套套打码", info="➤➤", result=f"请求失败{e}", result_type=False)
-            return None
-        if data.status_code != 200:
-            return None
-        data = data.json()
-        if data["status"] == 1:
-            key_num = data["points"]
-            return key_num
-        else:
-            return None
+        return str(2333 - int(key_num)) if choice == "sf" else str(key_num)
     return None

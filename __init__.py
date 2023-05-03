@@ -8,14 +8,18 @@ from .handle.coin_handle import mhy_bbs_coin, bbs_auto_coin
 from .handle.sign_handle import mhy_bbs_sign, bbs_auto_sign
 from .config.config import config
 from .utils.logger import Logger
-from .web import web_api, web_page
+from .web import web_api, web_page # noqa
 
 from LittlePaimon.database import MihoyoBBSSub, PrivateCookie, DailyNoteSub
 from LittlePaimon.utils.message import CommandPlayer, CommandUID, CommandSwitch
 
 from nonebot import on_command, Bot
 from nonebot.typing import T_State
-from nonebot.adapters.onebot.v11 import Message, GroupMessageEvent, PrivateMessageEvent
+from nonebot.adapters.onebot.v11 import (
+    Message,
+    GroupMessageEvent,
+    PrivateMessageEvent,
+)
 from nonebot.permission import SUPERUSER
 from nonebot.plugin import PluginMetadata
 from nonebot.rule import to_me
@@ -129,7 +133,9 @@ async def _(
             await sign.finish("你已经在执行签到任务中，请勿重复发送", at_sender=True)
         else:
             await sign.send(f"开始为UID{uid}执行米游社签到，耗时较长，请稍等...", at_sender=True)
-            Logger.info("原神签到", "开始为", {"用户": event.user_id, "uid": uid, "执行签到": ""})
+            Logger.info(
+                "原神签到", "开始为", {"用户": event.user_id, "uid": uid, "签到": ""}
+            )
             signing_list.append(f"{event.user_id}-{uid}")
             judgment = isinstance(event, GroupMessageEvent)
             if judgment and event.group_id in config.group_allow_list:
@@ -144,10 +150,16 @@ async def _(
             signing_list.remove(f"{event.user_id}-{uid}")
             await sign.finish(result, at_sender=True)
     else:
-        sub_data = {"user_id": event.user_id, "uid": uid, "sub_event": "米游社原神签到"}
+        sub_data = {
+            "user_id": event.user_id,
+            "uid": uid,
+            "sub_event": "米游社原神签到",
+        }
         if switch:
             # switch为开启，则添加订阅
-            if await PrivateCookie.get_or_none(user_id=str(event.user_id), uid=uid):
+            if await PrivateCookie.get_or_none(
+                user_id=str(event.user_id), uid=uid
+            ):
                 await MihoyoBBSSub.update_or_create(
                     **sub_data,
                     defaults={
@@ -157,21 +169,31 @@ async def _(
                     },
                 )
                 Logger.info(
-                    "米游社原神签到", "", {"user_id": event.user_id, "uid": uid}, "开启成功"
+                    "米游社原神签到",
+                    "",
+                    {"user_id": event.user_id, "uid": uid},
+                    "开启成功",
                 )
                 await sign.finish(f"UID{uid}开启米游社原神自动签到成功", at_sender=True)
             else:
-                await sign.finish(f"UID{uid}尚未绑定Cookie！请先使用ysb指令绑定吧！", at_sender=True)
+                await sign.finish(
+                    f"UID{uid}尚未绑定Cookie！请先使用ysb指令绑定吧！", at_sender=True
+                )
         else:
             # switch为关闭，则取消订阅
             if sub := await MihoyoBBSSub.get_or_none(**sub_data):
                 await sub.delete()
                 Logger.info(
-                    "米游社原神签到", "", {"user_id": event.user_id, "uid": uid}, "关闭成功"
+                    "米游社原神签到",
+                    "",
+                    {"user_id": event.user_id, "uid": uid},
+                    "关闭成功",
                 )
                 await sign.finish(f"UID{uid}关闭米游社原神自动签到成功", at_sender=True)
             else:
-                await sign.finish(f"UID{uid}尚未开启米游社原神自动签到，无需关闭！", at_sender=True)
+                await sign.finish(
+                    f"UID{uid}尚未开启米游社原神自动签到，无需关闭！", at_sender=True
+                )
 
 
 @all_sign.handle()
@@ -195,7 +217,9 @@ async def _(
         if f"{event.user_id}-{uid}" in coin_getting_list:
             await get_coin.finish("你已经在执行米游币获取任务中，请勿重复发送", at_sender=True)
         else:
-            await get_coin.send(f"开始为UID{uid}执行米游币获取，耗时较久，请稍等...", at_sender=True)
+            await get_coin.send(
+                f"开始为UID{uid}执行米游币获取，耗时较久，请稍等...", at_sender=True
+            )
             Logger.info(
                 "米游币自动获取", "开始为", {"用户": event.user_id, "uid": uid, "执行获取": ""}
             )
@@ -213,7 +237,11 @@ async def _(
             coin_getting_list.remove(f"{event.user_id}-{uid}")
             await get_coin.finish(result, at_sender=True)
     else:
-        sub_data = {"user_id": event.user_id, "uid": uid, "sub_event": "米游币自动获取"}
+        sub_data = {
+            "user_id": event.user_id,
+            "uid": uid,
+            "sub_event": "米游币自动获取",
+        }
         if switch:
             # switch为开启，则添加订阅
             if (
@@ -230,7 +258,10 @@ async def _(
                     },
                 )
                 Logger.info(
-                    "米游币自动获取", "", {"user_id": event.user_id, "uid": uid}, "开启成功"
+                    "米游币自动获取",
+                    "",
+                    {"user_id": event.user_id, "uid": uid},
+                    "开启成功",
                 )
                 await sign.finish(f"UID{uid}开启米游币自动获取成功", at_sender=True)
             else:
@@ -243,7 +274,10 @@ async def _(
             if sub := await MihoyoBBSSub.get_or_none(**sub_data):
                 await sub.delete()
                 Logger.info(
-                    "米游币自动获取", "", {"user_id": event.user_id, "uid": uid}, "关闭成功"
+                    "米游币自动获取",
+                    "",
+                    {"user_id": event.user_id, "uid": uid},
+                    "关闭成功",
                 )
                 await sign.finish(f"UID{uid}关闭米游币自动获取成功", at_sender=True)
             else:
@@ -336,16 +370,14 @@ async def _(event: PrivateMessageEvent, arg: Message = CommandArg()):
         "套套": "tt",
     }
     url_choice = arg.extract_plain_text().strip()
-    if url_choice:
-        key = url_to_key.get(url_choice, "other")
-        if key != "other":
-            result = await gain_num(key)
-            result = "剩余" + result
-            if result is not None:
-                await get_num.finish(result, at_sender=True)
-            else:
-                await get_num.finish("请求失败，请检查key是否失效或填写错误或网络问题", at_sender=True)
-        else:
-            await get_num.finish("没有这种平台", at_sender=True)
-    else:
-        await get_num.finish("请在后面加上你要查询积分的平台")
+    if not url_choice:
+        return await get_num.finish("请在后面加上你要查询积分的平台", at_sender=True)
+    key = url_to_key.get(url_choice, "other")
+    if key == "other":
+        return await get_num.finish("没有这种平台", at_sender=True)
+    result = await gain_num(key)
+    if result is None:
+        return await get_num.finish(
+            "请求失败，请检查key是否失效或填写错误或网络问题，详细查看后台", at_sender=True
+        )
+    await get_num.finish(f"剩余{result}", at_sender=True)
