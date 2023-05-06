@@ -4,35 +4,37 @@ import datetime
 import random
 import time
 from collections import defaultdict
-from typing import Tuple, Union
+from typing import Dict, Tuple, Union
 
-from LittlePaimon.database import MihoyoBBSSub, PrivateCookie, LastQuery
-from LittlePaimon.utils import scheduler, DRIVER
+from LittlePaimon.database import LastQuery, MihoyoBBSSub, PrivateCookie
+from LittlePaimon.utils import DRIVER, scheduler
 from LittlePaimon.utils.api import (
-    get_sign_reward_list,
     SIGN_ACTION_API,
-    random_hex,
     check_retcode,
     get_mihoyo_private_data,
+    get_sign_reward_list,
+    random_hex,
 )
 from LittlePaimon.utils.requests import aiorequests
 from nonebot import get_bot
 
 from ..captcha.captcha import (
     _HEADER,
-    get_validate,
+    get_ds2,
     get_sign_info,
     get_sign_list,
-    get_ds2,
+    get_validate,
 )
 from ..config.config import config
 from ..draw.sign_draw import SignResult, draw_result
 from ..utils.logger import Logger
 
-sign_reward_list: dict = {}
+sign_reward_list: Dict = {}
 
 
-async def sign_action(user_id: str, uid: str, Header: dict = {}) -> Union[dict, str]:
+async def sign_action(
+    user_id: str, uid: str, Header: Dict = {}
+) -> Union[Dict, str]:
     cookie_info = await PrivateCookie.get_or_none(user_id=user_id, uid=uid)
     server_id = "cn_qd01" if uid[0] == "5" else "cn_gf01"
     HEADER = copy.deepcopy(_HEADER)
@@ -69,13 +71,16 @@ async def mhy_bbs_sign(
     :return: 签到成功天数或失败原因
     """
     await LastQuery.update_or_create(
-        user_id=user_id, defaults={"uid": uid, "last_time": datetime.datetime.now()}
+        user_id=user_id,
+        defaults={"uid": uid, "last_time": datetime.datetime.now()},
     )
     Logger.info("原神签到", "➤➤", {"用户": user_id, "UID": uid}, "开始执行签到")
     # 获得签到信息
     sign_info = await get_mihoyo_private_data(uid, user_id, "sign_info")
     if isinstance(sign_info, str):
-        Logger.info("原神签到", "➤➤", {"用户": user_id, "UID": uid}, "未绑定私人cookie或已失效", False)
+        Logger.info(
+            "原神签到", "➤➤", {"用户": user_id, "UID": uid}, "未绑定私人cookie或已失效", False
+        )
         await MihoyoBBSSub.filter(user_id=user_id, uid=uid).delete()
         return SignResult.FAIL, sign_info
     elif sign_info["data"]["is_sign"]:
@@ -84,7 +89,8 @@ async def mhy_bbs_sign(
         if sign_reward_list:
             return (
                 SignResult.DONE,
-                f'UID{uid}今天已经签过了，获得的奖励为\n{sign_reward_list[signed_days]["name"]}*{sign_reward_list[signed_days]["cnt"]}',
+                f"UID{uid}今天已经签过了，"
+                f'获得的奖励为\n{sign_reward_list[signed_days]["name"]}*{sign_reward_list[signed_days]["cnt"]}',
             )
         else:
             return SignResult.DONE, f"UID{uid}今天已经签过了"
@@ -94,10 +100,18 @@ async def mhy_bbs_sign(
         # 进行一次签到
         sign_data = await sign_action(user_id=user_id, uid=uid, Header=Header)
         # 检测数据
+        if isinstance(sign_data, str):
+            Logger.info(
+                "米游社原神签到",
+                "➤",
+                {"用户": user_id, "UID": uid},
+                f"获取数据失败, {sign_data}",
+                False,
+            )
+            return SignResult.FAIL, f"{uid}签到失败，{sign_data}\n"
         if (
             sign_data
             and "data" in sign_data
-            and sign_data["data"]
             and "risk_code" in sign_data["data"]
         ):
             # 出现校验码
@@ -138,7 +152,9 @@ async def mhy_bbs_sign(
             # 成功签到!
             else:
                 if index == 0:
-                    Logger.info("原神签到", "➤➤", {"用户": user_id, "UID": uid}, "无验证码，签到成功")
+                    Logger.info(
+                        "原神签到", "➤➤", {"用户": user_id, "UID": uid}, "无验证码，签到成功"
+                    )
                     result = "[无验证]"
                 else:
                     Logger.info(
@@ -149,23 +165,31 @@ async def mhy_bbs_sign(
                     )
                     result = "[验证]"
                 break
-        # 重试超过阈值
         else:
-            result = "签到失败...请求失败!" + "\n" + "无法绕过验证码"
-            Logger.info("原神签到", "➤➤", {"用户": user_id, "UID": uid}, "重试超过阈值，签到失败", False)
-            return SignResult.FAIL, result
-    # 签到失败
+            Logger.info(
+                "米游社原神签到",
+                "➤",
+                {"用户": user_id, "UID": uid},
+                f"获取数据失败, {sign_data}",
+                False,
+            )
+            return SignResult.FAIL, "签到失败...未知错误!"
+    # 重试超过阈值
     else:
-        result = "签到失败!"
+        result = "签到失败...请求失败!" + "\n" + "无法绕过验证码"
         Logger.info(
-            "原神签到", "➤➤", {"用户": user_id, "UID": uid}, f"签到失败，结果：{result}", False
+            "原神签到", "➤➤", {"用户": user_id, "UID": uid}, "重试超过阈值，签到失败", False
         )
         return SignResult.FAIL, result
     sign_info = sign_info["data"]
     sign_list = await get_sign_list()
     status = sign_data["message"]
-    getitem = sign_list["data"]["awards"][int(sign_info["total_sign_day"])]["name"]
-    getnum = sign_list["data"]["awards"][int(sign_info["total_sign_day"])]["cnt"]
+    getitem = sign_list["data"]["awards"][int(sign_info["total_sign_day"])][
+        "name"
+    ]
+    getnum = sign_list["data"]["awards"][int(sign_info["total_sign_day"])][
+        "cnt"
+    ]
     get_im = f"本次签到获得{getitem}x{getnum}"
     new_sign_info = await get_sign_info(user_id, uid)
     new_sign_info = new_sign_info["data"]
@@ -175,7 +199,9 @@ async def mhy_bbs_sign(
         result = f"签到失败, 状态为:{status}"
         return SignResult.FAIL, result
     sign_missed = sign_info["sign_cnt_missed"]
-    result = mes_im + result + "!" + "\n" + f"本月漏签次数：{sign_missed}" + "\n" + get_im
+    result = (
+        mes_im + result + "!" + "\n" + f"本月漏签次数：{sign_missed}" + "\n" + get_im
+    )
     Logger.info(
         "原神签到",
         "➤➤",
@@ -218,9 +244,13 @@ async def bbs_auto_sign():
             sub.user_id in config.member_allow_list
             or sub.group_id in config.group_allow_list
         ):
-            result, msg = await mhy_bbs_sign(True, str(sub.user_id), sub.uid)  # 执行验证签到
+            result, msg = await mhy_bbs_sign(
+                True, str(sub.user_id), sub.uid
+            )  # 执行验证签到
         else:
-            result, msg = await mhy_bbs_sign(False, str(sub.user_id), sub.uid)  # 执行普通签到
+            result, msg = await mhy_bbs_sign(
+                False, str(sub.user_id), sub.uid
+            )  # 执行普通签到
         # 将签到结果分群或个人添加到结果列表中
         if sub.user_id != sub.group_id:
             sign_result_group[sub.group_id].append(
@@ -245,11 +275,21 @@ async def bbs_auto_sign():
             )
         if result == SignResult.DONE:
             sleep_time = random.randint(5, 10)
-            Logger.info("原神签到", "➤➤", {"用户": sub.user_id, "UID": sub.uid}, f"签到过了,等待{sleep_time}秒执行下一个用户")
+            Logger.info(
+                "原神签到",
+                "➤➤",
+                {"用户": sub.user_id, "UID": sub.uid},
+                f"签到过了,等待{sleep_time}秒执行下一个用户",
+            )
             await asyncio.sleep(sleep_time)
         else:
             sleep_time = random.randint(60, 90)
-            Logger.info("原神签到", "➤➤", {"用户": sub.user_id, "UID": sub.uid}, f"执行完毕,等待{sleep_time}秒执行下一个用户")
+            Logger.info(
+                "原神签到",
+                "➤➤",
+                {"用户": sub.user_id, "UID": sub.uid},
+                f"执行完毕,等待{sleep_time}秒执行下一个用户",
+            )
             await asyncio.sleep(sleep_time)
 
     Logger.info("原神签到", "➤➤", result="全部执行完毕,开始处理群结果")
@@ -273,7 +313,9 @@ async def bbs_auto_sign():
                     f'{"" if result["result"] == SignResult.FAIL else "，获得奖励：" + result["reward"]}',
                 )
             except Exception as e:
-                Logger.info("原神签到", "➤➤", {"用户": user_id}, f"发送签到结果失败: {e}", False)
+                Logger.info(
+                    "原神签到", "➤➤", {"用户": user_id}, f"发送签到结果失败: {e}", False
+                )
         await asyncio.sleep(random.randint(3, 6))
     Logger.info("原神签到", f"签到完成，共花费<m>{round((time.time() - t) / 60, 2)}</m>分钟")
 
@@ -287,5 +329,5 @@ async def init_reward_list():
     try:
         sign_reward_list = await get_sign_reward_list()
         sign_reward_list = sign_reward_list["data"]["awards"]
-    except Exception:
-        Logger.info("原神签到", "初始化签到奖励列表<r>失败</r>")
+    except Exception as e:
+        Logger.info("原神签到", f"初始化签到奖励列表<r>失败</r>{e}")

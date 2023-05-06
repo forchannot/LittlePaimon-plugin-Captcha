@@ -1,31 +1,43 @@
 import datetime
+
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
-
-from ..config.config import ConfigManager
-
 from LittlePaimon.web.api import BaseApiRouter
 from LittlePaimon.web.api.utils import authentication
+
+from ..config.config import ConfigManager
 
 route = APIRouter()
 
 
 @route.get(
-    "/abyss_config_g", response_class=JSONResponse, dependencies=[authentication()]
+    "/abyss_config_g",
+    response_class=JSONResponse,
+    dependencies=[authentication()],
 )
 async def abyss_config_g():
     config = ConfigManager.config.dict(by_alias=True)
     config["米游社验证签到开始时间"] = datetime.datetime(
-        1970, 1, 1, hour=config["米游社验证签到开始时间(小时)"], minute=config["米游社验证签到开始时间(分钟)"]
+        1970,
+        1,
+        1,
+        hour=config["米游社验证签到开始时间(小时)"],
+        minute=config["米游社验证签到开始时间(分钟)"],
     ).strftime("%H:%M")
     config["米游币验证开始执行时间"] = datetime.datetime(
-        1970, 1, 1, hour=config["米游币验证开始执行时间(小时)"], minute=config["米游币验证开始执行时间(分钟)"]
+        1970,
+        1,
+        1,
+        hour=config["米游币验证开始执行时间(小时)"],
+        minute=config["米游币验证开始执行时间(分钟)"],
     ).strftime("%H:%M")
     return {"status": 0, "msg": "ok", "data": config}
 
 
 @route.post(
-    "/abyss_config", response_class=JSONResponse, dependencies=[authentication()]
+    "/abyss_config",
+    response_class=JSONResponse,
+    dependencies=[authentication()],
 )
 async def abyss_config(data: dict):
     if "米游社验证签到开始时间" in data:

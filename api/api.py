@@ -11,9 +11,7 @@ BBS_LIST_URL = (
     "}&is_good=false&is_hot=false&page_size=20&sort_type=1"
 )
 BBS_DETAIL_URL = "https://bbs-api.mihoyo.com/post/api/getPostFull?post_id={}"
-BBS_SHARE_URL = (
-    "https://bbs-api.mihoyo.com/apihub/api/getShareConf?entity_id={}&entity_type=1"
-)
+BBS_SHARE_URL = "https://bbs-api.mihoyo.com/apihub/api/getShareConf?entity_id={}&entity_type=1"
 BBS_LIKE_URL = "https://bbs-api.mihoyo.com/apihub/sapi/upvotePost"
 BBS_API = "https://bbs-api.mihoyo.com"
 BBS_CAPATCH = BBS_API + "/misc/api/createVerification?is_high=true"
@@ -64,5 +62,10 @@ mihoyo_bbs_List = [
         "name": "崩坏：星穹铁道",
         "url": "https://bbs.mihoyo.com/sr/",
     },
-    {"id": "8", "forumId": "57", "name": "绝区零", "url": "https://bbs.mihoyo.com/zzz/"},
+    {
+        "id": "8",
+        "forumId": "57",
+        "name": "绝区零",
+        "url": "https://bbs.mihoyo.com/zzz/",
+    },
 ]

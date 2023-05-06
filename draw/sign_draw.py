@@ -2,7 +2,9 @@ import math
 from collections import defaultdict
 from enum import IntEnum, auto
 
-from LittlePaimon.utils.image import PMImage, font_manager as fm, load_image
+from LittlePaimon.utils.image import PMImage
+from LittlePaimon.utils.image import font_manager as fm
+from LittlePaimon.utils.image import load_image
 from LittlePaimon.utils.message import MessageBuild
 from LittlePaimon.utils.path import RESOURCE_BASE_PATH
 
@@ -13,8 +15,10 @@ class SignResult(IntEnum):
     FAIL = auto()
 
 
-async def draw_result(group_id: int, data: list):
-    img = PMImage(await load_image(RESOURCE_BASE_PATH / "player_card" / "white_bg.png"))
+async def draw_result(group_id: str, data: list):
+    img = PMImage(
+        await load_image(RESOURCE_BASE_PATH / "player_card" / "white_bg.png")
+    )
     success_list = [
         d for d in data if d["result"] in [SignResult.SUCCESS, SignResult.DONE]
     ]
@@ -32,11 +36,15 @@ async def draw_result(group_id: int, data: list):
     text_width = [70, 290, 510]
 
     await img.text("米游社自动签到结果", 50, 30, fm.get("优设标题黑", 60), "#252525")
-    await img.text(str(group_id), 50, 85, fm.get("优设标题黑", 48), "#252525")
-    await img.text(f"本群已开启自动签到共{len(data)}人", 50, 145, fm.get("优设标题黑", 36), "#252525")
+    await img.text(group_id, 50, 85, fm.get("优设标题黑", 48), "#252525")
+    await img.text(
+        f"本群已开启自动签到共{len(data)}人", 50, 145, fm.get("优设标题黑", 36), "#252525"
+    )
 
     await img.paste(
-        await load_image(RESOURCE_BASE_PATH / "icon" / "success.png", size=(50, 50)),
+        await load_image(
+            RESOURCE_BASE_PATH / "icon" / "success.png", size=(50, 50)
+        ),
         (50, 220),
     )
     await img.text("签到成功：", 110, 230, fm.get("优设标题黑", 36), "#00921b")
@@ -64,11 +72,17 @@ async def draw_result(group_id: int, data: list):
         now_height += math.ceil(len(same_reward[reward]) / 3) * 45
     now_height += 20
     await img.paste(
-        await load_image(RESOURCE_BASE_PATH / "icon" / "fail.png", size=(50, 50)),
+        await load_image(
+            RESOURCE_BASE_PATH / "icon" / "fail.png", size=(50, 50)
+        ),
         (50, now_height),
     )
     await img.text(
-        "签到失败(CK失效或出现验证码)：", 110, now_height + 10, fm.get("优设标题黑", 36), "#d60623"
+        "签到失败(CK失效或出现验证码)：",
+        110,
+        now_height + 10,
+        fm.get("优设标题黑", 36),
+        "#d60623",
     )
     now_height += 60
     i = 0

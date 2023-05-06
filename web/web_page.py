@@ -1,17 +1,23 @@
-from LittlePaimon.web.pages import admin_app
 from amis import (
-    Form,
-    LevelEnum,
-    Divider,
-    Group,
-    InputText,
+    Action,
     Alert,
+    Divider,
+    Form,
+    Group,
     Html,
+    InputNumber,
+    InputTag,
+    InputText,
     InputTime,
     InputTimeRange,
-    InputNumber,
+    LevelEnum,
+    Page,
+    PageSchema,
+    Remark,
+    Select,
+    Switch,
 )
-from amis import PageSchema, Page, Switch, Remark, InputTag, Action, Select
+from LittlePaimon.web.pages import admin_app
 
 action_button = [
     Action(label="保存", level=LevelEnum.success, type="submit"),
@@ -209,7 +215,8 @@ coding_form = Form(
                     name="实时便签验证检查间隔",
                     value="${实时便签验证检查间隔}",
                     labelRemark=Remark(
-                        shape="circle", content="每多少分钟检查进行一次实时便签，推荐不快于8分钟，修改后重启生效"
+                        shape="circle",
+                        content="每多少分钟检查进行一次实时便签，推荐不快于8分钟，修改后重启生效",
                     ),
                     displayMode="enhance",
                     suffix="分钟",

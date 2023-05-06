@@ -3,12 +3,12 @@ from typing import Union
 from nonebot.params import CommandArg
 
 from .captcha.captcha import gain_num
-from .handle.ssbq_handler import handle_ssbq, SubList, get_subs
+from .handle.ssbq_handler import handle_ssbq, sub_list, get_subs
 from .handle.coin_handle import mhy_bbs_coin, bbs_auto_coin
 from .handle.sign_handle import mhy_bbs_sign, bbs_auto_sign
 from .config.config import config
 from .utils.logger import Logger
-from .web import web_api, web_page # noqa
+from .web import web_api, web_page  # noqa
 
 from LittlePaimon.database import MihoyoBBSSub, PrivateCookie, DailyNoteSub
 from LittlePaimon.utils.message import CommandPlayer, CommandUID, CommandSwitch
@@ -329,7 +329,7 @@ async def _(
     event: Union[GroupMessageEvent, PrivateMessageEvent],
     uid=CommandUID(),
     switch=CommandSwitch(),
-    subs=SubList(),
+    subs=sub_list(),
 ):
     sub_data = {
         "user_id": event.user_id,

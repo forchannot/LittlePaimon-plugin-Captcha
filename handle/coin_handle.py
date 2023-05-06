@@ -3,25 +3,25 @@ import datetime
 import random
 import time
 from collections import defaultdict
-from typing import Tuple
+from typing import Dict, Tuple
 
-from LittlePaimon.database import PrivateCookie, MihoyoBBSSub, LastQuery
+from LittlePaimon.database import LastQuery, MihoyoBBSSub, PrivateCookie
 from LittlePaimon.utils import scheduler
-from LittlePaimon.utils.api import random_text, random_hex
+from LittlePaimon.utils.api import random_hex, random_text
 from LittlePaimon.utils.requests import aiorequests
 from nonebot import get_bot
 
 from ..api.api import (
-    mihoyo_bbs_List,
-    BBS_TASKS_LIST,
-    BBS_LIST_URL,
-    BBS_SIGN_URL,
     BBS_DETAIL_URL,
     BBS_LIKE_URL,
+    BBS_LIST_URL,
     BBS_SHARE_URL,
+    BBS_SIGN_URL,
+    BBS_TASKS_LIST,
+    mihoyo_bbs_List,
     mihoyobbs_version,
 )
-from ..captcha.captcha import get_pass_challenge, get_ds2, get_ds_x6
+from ..captcha.captcha import get_ds2, get_ds_x6, get_pass_challenge
 from ..config.config import config
 from ..utils.logger import Logger
 
@@ -32,7 +32,7 @@ class MihoyoBBSCoin:
     """
 
     def __init__(self, coin_allow: bool, cookies, uid, user_id):
-        self.headers: dict = {
+        self.headers: Dict = {
             "DS": get_ds2(web=False),
             "cookie": cookies,
             "x-rpc-client_type": "2",
@@ -47,7 +47,7 @@ class MihoyoBBSCoin:
             "User-Agent": "okhttp/4.8.0",
         }
         self.postsList: list = []
-        self.Task_do: dict = {
+        self.Task_do: Dict = {
             "bbs_Sign": False,
             "bbs_Read_posts": False,
             "bbs_Read_posts_num": 3,
@@ -72,7 +72,12 @@ class MihoyoBBSCoin:
         """
         await self.get_list()
         await self.get_tasks_list()
-        tasks_list = [self.signing, self.read_posts, self.like_posts, self.share_post]
+        tasks_list = [
+            self.signing,
+            self.read_posts,
+            self.like_posts,
+            self.share_post,
+        ]
         result = "米游币获取结果：\n"
         for task in tasks_list:
             if not self.is_valid:
@@ -94,7 +99,9 @@ class MihoyoBBSCoin:
                 if data["retcode"] in [-100, 10001]
                 else f"出错了:{data['message']} {data['message']}"
             )
-            Logger.info("米游币获取", "➤➤", result=f"{self.state}", result_type=False)
+            Logger.info(
+                "米游币获取", "➤➤", result=f"{self.state}", result_type=False
+            )
             return self.state
         self.available_coins = data["data"]["can_get_points"]
         self.received_coins = data["data"]["already_received_points"]
@@ -118,13 +125,17 @@ class MihoyoBBSCoin:
                         if i["is_get_award"]:
                             self.Task_do["bbs_Read_posts"] = True
                         else:
-                            self.Task_do["bbs_Read_posts_num"] -= i["happened_times"]
+                            self.Task_do["bbs_Read_posts_num"] -= i[
+                                "happened_times"
+                            ]
                     # 60是给帖子点赞
                     elif i["mission_id"] == 60:
                         if i["is_get_award"]:
                             self.Task_do["bbs_Like_posts"] = True
                         else:
-                            self.Task_do["bbs_Like_posts_num"] -= i["happened_times"]
+                            self.Task_do["bbs_Like_posts_num"] -= i[
+                                "happened_times"
+                            ]
                     # 61是分享帖子
                     elif i["mission_id"] == 61:
                         if i["is_get_award"]:
@@ -132,7 +143,9 @@ class MihoyoBBSCoin:
                             # 分享帖子，是最后一个任务，到这里了下面都是一次性任务，直接跳出循环
                             break
             Logger.info(
-                "米游币获取", "➤➤", result=f"该用户今天还可获取<m>{self.available_coins}</m>个米游币"
+                "米游币获取",
+                "➤➤",
+                result=f"该用户今天还可获取<m>{self.available_coins}</m>个米游币",
             )
 
     async def get_list(self):
@@ -190,7 +203,9 @@ class MihoyoBBSCoin:
                             header["x-rpc-challenge"] = challenge
                             Logger.info("米游币获取", "➤➤", result="正在重新请求")
                             req2 = await aiorequests.post(
-                                url=BBS_SIGN_URL, json={"gids": i["id"]}, headers=header
+                                url=BBS_SIGN_URL,
+                                json={"gids": i["id"]},
+                                headers=header,
                             )
                             data = req2.json()
                             if data["retcode"] == 1034:
@@ -210,7 +225,10 @@ class MihoyoBBSCoin:
                         self.is_valid = False
                         self.state = f"出错了:{data['retcode']} {data['message']}"
                     Logger.info(
-                        "米游币获取", "➤➤", result=f"{self.state}", result_type=False
+                        "米游币获取",
+                        "➤➤",
+                        result=f"{self.state}",
+                        result_type=False,
                     )
                 else:
                     self.state = "完成！"
@@ -233,7 +251,8 @@ class MihoyoBBSCoin:
         num_ok = 0
         for i in range(self.Task_do["bbs_Read_posts_num"]):
             req = await aiorequests.get(
-                url=BBS_DETAIL_URL.format(self.postsList[i][0]), headers=self.headers
+                url=BBS_DETAIL_URL.format(self.postsList[i][0]),
+                headers=self.headers,
             )
             data = req.json()
             if data["message"] == "OK":
@@ -289,7 +308,8 @@ class MihoyoBBSCoin:
             return "分享帖子：已经完成过了~"
         for _ in range(3):
             req = await aiorequests.get(
-                url=BBS_SHARE_URL.format(self.postsList[0][0]), headers=self.headers
+                url=BBS_SHARE_URL.format(self.postsList[0][0]),
+                headers=self.headers,
             )
             data = req.json()
             if data["message"] == "OK":
@@ -316,10 +336,15 @@ async def mhy_bbs_coin(coin_allow: bool, user_id: str, uid: str) -> str:
     elif cookie.stoken is None:
         return "你绑定Cookie中没有login_ticket，请重新用ysb指令绑定！"
     await LastQuery.update_or_create(
-        user_id=user_id, defaults={"uid": uid, "last_time": datetime.datetime.now()}
+        user_id=user_id,
+        defaults={"uid": uid, "last_time": datetime.datetime.now()},
     )
-    Logger.info("米游币自动获取", "➤➤执行", {"用户": user_id, "UID": uid, "的米游币获取中": "......"})
-    get_coin_task = MihoyoBBSCoin(coin_allow, cookie.stoken, user_id=user_id, uid=uid)
+    Logger.info(
+        "米游币自动获取", "➤➤执行", {"用户": user_id, "UID": uid, "的米游币获取中": "......"}
+    )
+    get_coin_task = MihoyoBBSCoin(
+        coin_allow, cookie.stoken, user_id=user_id, uid=uid
+    )
     result, msg = await get_coin_task.run()
     return msg if result else f"UID{uid}{msg}"
 
@@ -379,7 +404,12 @@ async def bbs_auto_coin():
                 }
             )
         sleep_time = random.randint(5, 10)
-        Logger.info("米游币获取", "➤➤", {"用户": sub.user_id, "UID": sub.uid}, f"执行完毕,等待{sleep_time}秒执行下一个用户")
+        Logger.info(
+            "米游币获取",
+            "➤➤",
+            {"用户": sub.user_id, "UID": sub.uid},
+            f"执行完毕,等待{sleep_time}秒执行下一个用户",
+        )
         await asyncio.sleep(sleep_time)
 
     for group_id, result_list in coin_result_group.items():
@@ -399,7 +429,9 @@ async def bbs_auto_coin():
         try:
             await get_bot().send_group_msg(group_id=int(group_id), message=msg)
         except Exception as e:
-            Logger.info("米游币自动获取", "➤➤", {"群": group_id}, f"发送米游币自动结果失败: {e}", False)
+            Logger.info(
+                "米游币自动获取", "➤➤", {"群": group_id}, f"发送米游币自动结果失败: {e}", False
+            )
         await asyncio.sleep(random.randint(3, 6))
 
     for user_id, result_list in coin_result_private.items():
@@ -410,8 +442,14 @@ async def bbs_auto_coin():
                 )
             except Exception as e:
                 Logger.info(
-                    "米游币自动获取", "➤➤", {"用户": user_id}, f"发送米游币自动结果失败: {e}", False
+                    "米游币自动获取",
+                    "➤➤",
+                    {"用户": user_id},
+                    f"发送米游币自动结果失败: {e}",
+                    False,
                 )
             await asyncio.sleep(random.randint(3, 6))
 
-    Logger.info("米游币自动获取", f"获取完成，共花费<m>{round((time.time() - t) / 60, 2)}</m>分钟")
+    Logger.info(
+        "米游币自动获取", f"获取完成，共花费<m>{round((time.time() - t) / 60, 2)}</m>分钟"
+    )

@@ -18,7 +18,9 @@ class Logger:
         result_type: bool = True,
     ):
         param_str = (
-            " ".join([f"{k}<m>{escape_tag(str(v))}</m>" for k, v in param.items()])
+            " ".join(
+                [f"{k}<m>{escape_tag(str(v))}</m>" for k, v in param.items()]
+            )
             if param
             else ""
         )

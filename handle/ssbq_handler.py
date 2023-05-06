@@ -5,22 +5,26 @@ import re
 import time
 
 import pytz
+from LittlePaimon.database import (
+    DailyNoteSub,
+    LastQuery,
+    Player,
+    PrivateCookie,
+)
+from LittlePaimon.utils import scheduler
+from LittlePaimon.utils.api import DAILY_NOTE_API, get_mihoyo_private_data
+from LittlePaimon.utils.requests import aiorequests
 from nonebot import get_bot
 from nonebot.adapters.onebot.v11 import Message
 from nonebot.params import CommandArg, Depends
 
-from ..draw.ssbq_draw import draw_daily_note_card
 from ..captcha.captcha import get_pass_challenge, mihoyo_headers
 from ..config.config import config
+from ..draw.ssbq_draw import draw_daily_note_card
 from ..utils.logger import Logger
 
-from LittlePaimon.database import DailyNoteSub, Player, LastQuery, PrivateCookie
-from LittlePaimon.utils import scheduler
-from LittlePaimon.utils.api import get_mihoyo_private_data, DAILY_NOTE_API
-from LittlePaimon.utils.requests import aiorequests
 
-
-def SubList() -> dict:
+def sub_list() -> dict:
     async def _sub(msg: Message = CommandArg()):
         msg = msg.extract_plain_text().strip()
         subs = {}
@@ -51,7 +55,9 @@ async def get_subs(**kwargs) -> str:
 
 async def handle_ssbq(player: Player, sign_allow: bool):
     await LastQuery.update_last_query(player.user_id, player.uid)
-    data = await get_mihoyo_private_data(player.uid, player.user_id, "daily_note")
+    data = await get_mihoyo_private_data(
+        player.uid, player.user_id, "daily_note"
+    )
     if isinstance(data, str):
         Logger.info(
             "原神实时便签",
@@ -62,7 +68,9 @@ async def handle_ssbq(player: Player, sign_allow: bool):
         )
         return f"{player.uid}{data}\n"
     elif data["retcode"] == 1034:
-        if (config.rrocr_key or config.third_api or config.ttocr_key) and sign_allow:
+        if (
+            config.rrocr_key or config.third_api or config.ttocr_key
+        ) and sign_allow:
             Logger.info(
                 "原神实时便签",
                 "➤➤",
@@ -122,10 +130,14 @@ async def handle_ssbq(player: Player, sign_allow: bool):
         )
         return f'{player.uid}获取数据失败，msg为{data["message"]}\n'
     else:
-        Logger.info("原神实时便签", "➤➤", {"用户": player.user_id, "UID": player.uid}, "获取数据成功")
+        Logger.info(
+            "原神实时便签", "➤➤", {"用户": player.user_id, "UID": player.uid}, "获取数据成功"
+        )
 
         try:
-            img = await draw_daily_note_card(data["data"], player.uid, player.user_id)
+            img = await draw_daily_note_card(
+                data["data"], player.uid, player.user_id
+            )
             Logger.info(
                 "原神实时便签",
                 "➤➤",
@@ -144,7 +156,9 @@ async def handle_ssbq(player: Player, sign_allow: bool):
             return f"{player.uid}绘制图片失败，{e}\n"
 
 
-@scheduler.scheduled_job("cron", minute=f"*/{config.ssbq_check}", misfire_grace_time=10)
+@scheduler.scheduled_job(
+    "cron", minute=f"*/{config.ssbq_check}", misfire_grace_time=10
+)
 async def check_note():
     if not config.ssbq_enable:
         return
@@ -156,7 +170,8 @@ async def check_note():
     time_now = time.time()
     Logger.info(
         "原神实时便签",
-        f"开始执行定时检查，共<m>{len(subs)}</m>个任务，预计花费<m>{round(6 * len(subs) / 60, 2)}</m>分钟",
+        f"开始执行定时检查，共<m>{len(subs)}</m>个任务，"
+        f"预计花费<m>{round(6 * len(subs) / 60, 2)}</m>分钟",
     )
     for sub in subs:
         limit_num = 5 if sub.resin_num and sub.coin_num else 3
@@ -204,7 +219,7 @@ async def check_note():
                     )
                 await sub.delete()
             elif data["retcode"] == 1034:
-                logger.info(
+                Logger.info(
                     "原神实时便签",
                     "➤➤",
                     {"用户": sub.user_id, "UID": sub.uid},
@@ -273,5 +288,6 @@ async def check_note():
                 # 等待一会再检查下一个，防止检查过快
                 await asyncio.sleep(random.randint(4, 8))
     Logger.info(
-        "原神实时便签", f"树脂检查完成，共花费<m>{round((time.time() - time_now) / 60, 2)}</m>分钟"
+        "原神实时便签",
+        f"树脂检查完成，" f"共花费<m>{round((time.time() - time_now) / 60, 2)}</m>分钟",
     )

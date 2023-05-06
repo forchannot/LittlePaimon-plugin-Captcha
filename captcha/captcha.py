@@ -4,15 +4,15 @@ import json
 import random
 import string
 import time
-from typing import Union, Optional
+from typing import Dict, Optional
 
 from LittlePaimon.database import PrivateCookie
 from LittlePaimon.utils.api import (
     SIGN_INFO_API,
-    get_cookie,
-    random_hex,
-    md5,
     SIGN_REWARD_API,
+    get_cookie,
+    md5,
+    random_hex,
     random_text,
 )
 from LittlePaimon.utils.requests import aiorequests
@@ -22,9 +22,9 @@ from ..api.api import (
     BBS_CAPTCHA_VERIFY,
     mihoyobbs_salt,
     mihoyobbs_salt_web,
+    mihoyobbs_salt_x4,
     mihoyobbs_salt_x6,
     mihoyobbs_version,
-    mihoyobbs_salt_x4,
 )
 from ..config.config import config
 from ..utils.logger import Logger
@@ -39,7 +39,7 @@ _HEADER = {
 }
 
 
-def mihoyo_headers(cookie, challenge, q="", b=None) -> dict:
+def mihoyo_headers(cookie, challenge, q="", b=None) -> Dict:
     return {
         "DS": get_ds_x6(q, b),
         "Origin": "https://webstatic.mihoyo.com",
@@ -53,7 +53,7 @@ def mihoyo_headers(cookie, challenge, q="", b=None) -> dict:
     }
 
 
-async def get_sign_list() -> dict:
+async def get_sign_list() -> Dict:
     req = await aiorequests.get(
         url=SIGN_REWARD_API,
         headers=_HEADER,
@@ -63,7 +63,7 @@ async def get_sign_list() -> dict:
     return data
 
 
-async def get_sign_info(user_id: str, uid: str) -> Union[dict, str]:
+async def get_sign_info(user_id: str, uid: str) -> Dict:
     cookie_info = await PrivateCookie.get_or_none(user_id=user_id, uid=uid)
     server_id = "cn_qd01" if uid[0] == "5" else "cn_gf01"
     header = copy.deepcopy(_HEADER)
@@ -93,7 +93,7 @@ def get_ds2(web: bool) -> str:
     return f"{i},{r},{c}"
 
 
-def get_ds_x6(q: str = "", b: dict = None, sign: bool = False) -> str:
+def get_ds_x6(q: str = "", b: Dict = None, sign: bool = False) -> str:
     b = json.dumps(b) if b else ""
     if sign:
         n = mihoyobbs_salt_x6
