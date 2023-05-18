@@ -295,7 +295,7 @@ async def bbs_auto_sign():
     Logger.info("原神签到", "➤➤", result="全部执行完毕,开始处理群结果")
     for group_id, sign_result in sign_result_group.items():
         # 发送签到结果到群
-        img = await draw_result(group_id, sign_result)
+        img = await draw_result(str(group_id), sign_result)
         try:
             await get_bot().send_group_msg(group_id=int(group_id), message=img)
         except Exception as e:
