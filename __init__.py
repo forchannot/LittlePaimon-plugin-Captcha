@@ -298,7 +298,7 @@ async def _(
     bot: Bot,
     event: Union[GroupMessageEvent, PrivateMessageEvent],
     state: T_State,
-    players=CommandPlayer(),
+    players=CommandPlayer(), # noqa
 ):
     if state.get("clear_msg"):
         await ssbq.finish("开启提醒请用[ssbq提醒开启|关闭 提醒内容+数量]指令，比如[ssbq提醒开启树脂150]")
@@ -321,7 +321,7 @@ async def _(
                 result = Message()
                 result += await handle_ssbq(player, False)
                 ssbq_list.remove(f"{event.user_id}-{player.uid}")
-        await ssbq.finish(result, at_sender=True)
+        await ssbq.finish(result, at_sender=True) # noqa
 
 
 @ssbq_sub.handle()
@@ -329,7 +329,7 @@ async def _(
     event: Union[GroupMessageEvent, PrivateMessageEvent],
     uid=CommandUID(),
     switch=CommandSwitch(),
-    subs=sub_list(),
+    subs=sub_list(), # noqa
 ):
     sub_data = {
         "user_id": event.user_id,

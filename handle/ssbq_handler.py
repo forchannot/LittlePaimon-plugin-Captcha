@@ -75,7 +75,7 @@ async def handle_ssbq(player: Player, sign_allow: bool):
                 "原神实时便签",
                 "➤➤",
                 {"用户": player.user_id, "UID": player.uid},
-                "获取数据失败，状态码为1034，疑似验证码",
+                "遇到验证码，开始尝试过码",
                 False,
             )
             challenge = await get_pass_challenge(

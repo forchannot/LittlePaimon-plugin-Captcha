@@ -7,6 +7,7 @@ from LittlePaimon.utils.image import font_manager as fm
 from LittlePaimon.utils.image import load_image
 from LittlePaimon.utils.message import MessageBuild
 from LittlePaimon.utils.path import RESOURCE_BASE_PATH
+from LittlePaimon.utils.requests import aiorequests
 
 
 async def draw_daily_note_card(data, uid, user_id):
@@ -222,8 +223,16 @@ async def draw_daily_note_card(data, uid, user_id):
         i = 0
         # await asyncio.gather(*[draw_exp(bg_img, exp[i], circle_img, finished_icon, i) for i in range(len(exp))])
         for role in exp:
-            role_avatar = await load_image(
-                RESOURCE_BASE_PATH
+            # role_avatar = await load_image(
+            #     RESOURCE_BASE_PATH
+            #     / "avatar_side"
+            #     / role["avatar_side_icon"].split("/")[-1],
+            #     size=(135, 135),
+            #     mode="RGBA",
+            # )
+            role_avatar = await aiorequests.get_img(
+                role["avatar_side_icon"],
+                save_path=RESOURCE_BASE_PATH
                 / "avatar_side"
                 / role["avatar_side_icon"].split("/")[-1],
                 size=(135, 135),

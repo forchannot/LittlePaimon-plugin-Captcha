@@ -146,10 +146,7 @@ async def mhy_bbs_sign(
                             False,
                         )
                         await asyncio.sleep(delay)
-                    continue
-                else:
-                    continue
-            # 成功签到!
+                continue
             else:
                 if index == 0:
                     Logger.info(
@@ -174,7 +171,6 @@ async def mhy_bbs_sign(
                 False,
             )
             return SignResult.FAIL, "签到失败...未知错误!"
-    # 重试超过阈值
     else:
         result = "签到失败...请求失败!" + "\n" + "无法绕过验证码"
         Logger.info(
