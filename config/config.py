@@ -16,6 +16,10 @@ class ConfigModel(BaseModel):
     auto_sign_hour: int = Field(0, alias="米游社验证签到开始时间(小时)")
     auto_sign_minute: int = Field(5, alias="米游社验证签到开始时间(分钟)")
 
+    sr_enable: bool = Field(True, alias="星铁自动签到验证开关")
+    sr_enable_hour: int = Field(0, alias="星铁签到验证开始执行时间(小时)")
+    sr_enable_minute: int = Field(0, alias="星铁签到验证开始执行时间(分钟)")
+
     ssbq_enable: bool = Field(True, alias="实时便签验证检查开关")
     ssbq_begin: int = Field(0, alias="实时便签验证停止检查开始时间")
     ssbq_end: int = Field(6, alias="实时便签验证停止检查结束时间")

@@ -165,6 +165,30 @@ coding_form = Form(
             labelWidth="auto",
             body=[
                 Switch(
+                    label="星铁自动签到验证开关",
+                    name="星铁自动签到验证开关",
+                    value="${星铁自动签到验证开关}",
+                    onText="开启",
+                    offText="关闭",
+                ),
+                InputTime(
+                    label="星铁签到验证开始执行时间",
+                    name="星铁签到验证开始执行时间",
+                    value="${星铁签到验证开始执行时间}",
+                    labelRemark=Remark(
+                        shape="circle", content="会在每天这个时间点进行星铁自动签到任务，修改后重启生效"
+                    ),
+                    inputFormat="HH时mm分",
+                    format="HH:mm",
+                ),
+            ],
+        ),
+        Divider(),
+        Group(
+            mode="horizontal",
+            labelWidth="auto",
+            body=[
+                Switch(
                     label="米游币验证自动获取开关",
                     name="米游币验证自动获取开关",
                     value="${米游币验证自动获取开关}",

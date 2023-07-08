@@ -15,7 +15,7 @@ class SignResult(IntEnum):
     FAIL = auto()
 
 
-async def draw_result(group_id: str, data: list):
+async def draw_result(group_id: str, data: list, sign_type: str):
     img = PMImage(
         await load_image(RESOURCE_BASE_PATH / "player_card" / "white_bg.png")
     )
@@ -35,7 +35,7 @@ async def draw_result(group_id: str, data: list):
 
     text_width = [70, 290, 510]
 
-    await img.text("米游社自动签到结果", 50, 30, fm.get("优设标题黑", 60), "#252525")
+    await img.text(f"{sign_type}自动签到结果", 50, 30, fm.get("优设标题黑", 60), "#252525")
     await img.text(group_id, 50, 85, fm.get("优设标题黑", 48), "#252525")
     await img.text(
         f"本群已开启自动签到共{len(data)}人", 50, 145, fm.get("优设标题黑", 36), "#252525"

@@ -33,8 +33,10 @@ sign_reward_list: Dict = {}
 
 
 async def sign_action(
-    user_id: str, uid: str, Header: Dict = {}
+    user_id: str, uid: str, Header=None
 ) -> Union[Dict, str]:
+    if Header is None:
+        Header = {}
     cookie_info = await PrivateCookie.get_or_none(user_id=user_id, uid=uid)
     server_id = "cn_qd01" if uid[0] == "5" else "cn_gf01"
     HEADER = copy.deepcopy(_HEADER)
@@ -137,7 +139,7 @@ async def mhy_bbs_sign(
                         Header["x-rpc-validate"] = validate
                         Header["x-rpc-seccode"] = f"{validate}|jordan"
                     else:
-                        delay = 300 + random.randint(1, 30)
+                        delay = 100 + random.randint(1, 30)
                         Logger.info(
                             "原神签到",
                             "➤➤",
@@ -291,7 +293,7 @@ async def bbs_auto_sign():
     Logger.info("原神签到", "➤➤", result="全部执行完毕,开始处理群结果")
     for group_id, sign_result in sign_result_group.items():
         # 发送签到结果到群
-        img = await draw_result(str(group_id), sign_result)
+        img = await draw_result(str(group_id), sign_result, "原神")
         try:
             await get_bot().send_group_msg(group_id=int(group_id), message=img)
         except Exception as e:

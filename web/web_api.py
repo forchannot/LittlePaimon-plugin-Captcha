@@ -31,6 +31,13 @@ async def abyss_config_g():
         hour=config["米游币验证开始执行时间(小时)"],
         minute=config["米游币验证开始执行时间(分钟)"],
     ).strftime("%H:%M")
+    config["星铁签到验证开始执行时间"] = datetime.datetime(
+        1970,
+        1,
+        1,
+        hour=config["星铁签到验证开始执行时间(小时)"],
+        minute=config["星铁签到验证开始执行时间(分钟)"],
+    ).strftime("%H:%M")
     return {"status": 0, "msg": "ok", "data": config}
 
 
@@ -44,6 +51,10 @@ async def abyss_config(data: dict):
         temp_time = datetime.datetime.strptime(data["米游社验证签到开始时间"], "%H:%M")
         data["米游社验证签到开始时间(小时)"] = temp_time.hour
         data["米游社验证签到开始时间(分钟)"] = temp_time.minute
+    if "星铁签到验证开始执行时间" in data:
+        temp_time = datetime.datetime.strptime(data["星铁签到验证开始执行时间"], "%H:%M")
+        data["星铁签到验证开始执行时间(小时)"] = temp_time.hour
+        data["星铁签到验证开始执行时间(分钟)"] = temp_time.minute
     if "米游币验证开始执行时间" in data:
         temp_time = datetime.datetime.strptime(data["米游币验证开始执行时间"], "%H:%M")
         data["米游币验证开始执行时间(小时)"] = temp_time.hour
