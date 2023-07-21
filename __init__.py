@@ -227,7 +227,9 @@ async def _(
 
 @all_sign.handle()
 @all_sr_sign.handle()
-async def _(event: Union[GroupMessageEvent, PrivateMessageEvent], matcher: Matcher):
+async def _(
+    event: Union[GroupMessageEvent, PrivateMessageEvent], matcher: Matcher
+):
     if isinstance(matcher, all_sign) and config.auto_sign_enable:
         await all_sign.send("开始执行全部原神重签，需要一定时间...")
         await bbs_auto_sign()
@@ -391,7 +393,10 @@ async def _(
 
 
 @get_num.handle()
-async def _(event: PrivateMessageEvent, arg: Message = CommandArg()):
+async def _(
+    event: Union[GroupMessageEvent, PrivateMessageEvent],
+    arg: Message = CommandArg(),
+):
     url_to_key = {
         "人人": "rr",
         "rr": "rr",
@@ -439,6 +444,7 @@ async def _(
             await sr_sign.finish(f"你已经在执行签到任务中，请勿重复发送", at_sender=True)
         else:
             from .handle.sr_sign_handle import sr_sign_in
+
             await sr_sign.send(f"开始为UID{sr_uid}执行星铁签到", at_sender=True)
             Logger.info(
                 "星铁签到",
@@ -451,13 +457,19 @@ async def _(
             judgment = isinstance(event, GroupMessageEvent)
             if judgment and event.group_id in config.group_allow_list:
                 Logger.info(f"群聊{event.group_id}在白名单内,开始执行验证签到")
-                _, result = await sr_sign_in(True, str(event.user_id), sr_uid, uid)
+                _, result = await sr_sign_in(
+                    True, str(event.user_id), sr_uid, uid
+                )
             elif event.user_id in config.member_allow_list:
                 Logger.info(f"用户{event.user_id}在白名单内,开始执行验证签到")
-                _, result = await sr_sign_in(True, str(event.user_id), sr_uid, uid)
+                _, result = await sr_sign_in(
+                    True, str(event.user_id), sr_uid, uid
+                )
             else:
                 Logger.info(f"用户{event.user_id}不在白名单内,开始执行普通签到")
-                _, result = await sr_sign_in(False, str(event.user_id), sr_uid, uid)
+                _, result = await sr_sign_in(
+                    False, str(event.user_id), sr_uid, uid
+                )
             sr_list.remove(f"{event.user_id}-{sr_uid}")
             await sr_sign.finish(result, at_sender=True)
     else:
