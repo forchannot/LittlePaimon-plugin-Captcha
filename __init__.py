@@ -115,7 +115,9 @@ ssbq_sub = on_command(
         "pm_priority": 1,
     },
 )
-get_num = on_command("查询积分", aliases={"查询剩余", "查询剩余积分"}, permission=SUPERUSER)
+get_num = on_command(
+    "查询积分", aliases={"查询剩余", "查询剩余积分"}, permission=SUPERUSER, rule=to_me()
+)
 sr_sign = on_command(
     "星铁签到",
     aliases={"星穹铁道签到", "铁道签到"},
