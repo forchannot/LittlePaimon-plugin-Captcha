@@ -1,31 +1,29 @@
 from typing import Union
 
-from nonebot.internal.matcher import Matcher
-from nonebot.params import CommandArg
-
-from .captcha.captcha import gain_num
-from .handle.ssbq_handler import handle_ssbq, sub_list, get_subs
-from .handle.coin_handle import mhy_bbs_coin, bbs_auto_coin
-from .handle.sign_handle import mhy_bbs_sign, bbs_auto_sign
-from .handle.sr_sign_handle import sr_bbs_auto_sign
-from .config.config import config
-from .utils.logger import Logger
-from .web import web_api, web_page  # noqa
-
-from LittlePaimon.database import MihoyoBBSSub, PrivateCookie, DailyNoteSub
-from LittlePaimon.utils.message import CommandPlayer, CommandUID, CommandSwitch
-
-from nonebot import on_command, Bot
-from nonebot.typing import T_State
+from LittlePaimon.database import DailyNoteSub, MihoyoBBSSub, PrivateCookie
+from LittlePaimon.utils.message import CommandPlayer, CommandSwitch, CommandUID
+from nonebot import Bot, on_command
 from nonebot.adapters.onebot.v11 import (
-    Message,
     GroupMessageEvent,
+    Message,
     PrivateMessageEvent,
 )
+from nonebot.internal.matcher import Matcher
+from nonebot.params import CommandArg
 from nonebot.permission import SUPERUSER
 from nonebot.plugin import PluginMetadata
 from nonebot.rule import to_me
+from nonebot.typing import T_State
 
+from .captcha.captcha import gain_num
+from .config.config import config
+from .handle.coin_handle import bbs_auto_coin, mhy_bbs_coin
+from .handle.sign_handle import bbs_auto_sign, mhy_bbs_sign
+from .handle.sr_sign_handle import sr_bbs_auto_sign
+from .handle.ssbq_handler import get_subs, handle_ssbq, sub_list
+from .utils.logger import Logger
+from .utils.update import do_update
+from .web import web_api, web_page  # noqa
 
 __plugin_meta__ = PluginMetadata(
     name="加强小派蒙验证",
@@ -142,6 +140,20 @@ all_sr_sign = on_command(
         "pm_description": "重签全部星铁签到任务，需超级用户权限",
         "pm_usage": "全部星铁重签",
         "pm_priority": 3,
+    },
+)
+update_self = on_command(
+    "验证签到插件更新",
+    aliases={"签到插件更新"},
+    priority=10,
+    block=True,
+    permission=SUPERUSER,
+    rule=to_me(),
+    state={
+        "pm_name": "验证签到插件更新",
+        "pm_description": "更新验证签到插件",
+        "pm_usage": "@Bot 验证签到插件更新",
+        "pm_priority": 10,
     },
 )
 
@@ -520,3 +532,10 @@ async def _(
                     f"UID{sr_uid}尚未开启星铁自动签到，无需关闭！", at_sender=True
                 )
     await sr_sign.finish(config.hfu, at_sender=True)
+
+
+@update_self.handle()
+async def _():
+    await update_self.send("正在更新验证签到插件，请稍后", at_sender=True)
+    result = await do_update()
+    await update_self.finish(result, at_sender=True)
