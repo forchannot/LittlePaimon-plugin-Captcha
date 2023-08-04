@@ -13,21 +13,17 @@ from LittlePaimon.utils.requests import aiorequests
 async def draw_daily_note_card(data, uid, user_id):
     gim = GenshinInfoManager(user_id, uid)
     abyss_info = await gim.get_abyss_info(1)
-    circle_img = await load_image(
-        RESOURCE_BASE_PATH / "daily_note" / "透明圆.png"
-    )
-    finished_icon = await load_image(
-        RESOURCE_BASE_PATH / "daily_note" / "finished.png"
-    )
+    if abyss_info.total_star is None:
+        abyss_info.total_star = 0
+    circle_img = await load_image(RESOURCE_BASE_PATH / "daily_note" / "透明圆.png")
+    finished_icon = await load_image(RESOURCE_BASE_PATH / "daily_note" / "finished.png")
     bg_img = PMImage(
         image=await load_image(
             RESOURCE_BASE_PATH / "daily_note" / "ssbq.png", mode="RGBA"
         )
     )
     # uid文字
-    await bg_img.text(
-        f"uid{uid}", 152, 251, fm.get("number.ttf", 60), "#5680d2"
-    )
+    await bg_img.text(f"uid{uid}", 152, 251, fm.get("number.ttf", 60), "#5680d2")
     # 树脂文字
     await bg_img.text(
         f"{data['current_resin']}/160",
@@ -52,12 +48,8 @@ async def draw_daily_note_card(data, uid, user_id):
         recover_time_day = (
             "今天" if recover_time.day == datetime.datetime.now().day else "明天"
         )
-        recover_time_str = (
-            f'将于{recover_time_day}{recover_time.strftime("%H:%M")}回满'
-        )
-        await bg_img.text(
-            recover_time_str, 780, 480, fm.get("优设标题黑.ttf", 40), "white"
-        )
+        recover_time_str = f'将于{recover_time_day}{recover_time.strftime("%H:%M")}回满'
+        await bg_img.text(recover_time_str, 780, 480, fm.get("优设标题黑.ttf", 40), "white")
     # 宝钱文字
     await bg_img.text(
         f"{data['current_home_coin']}/{data['max_home_coin']}",
@@ -75,9 +67,7 @@ async def draw_daily_note_card(data, uid, user_id):
         colors=["#507bd0", "#FFFFFF"],
     )
     if data["current_home_coin"] == data["max_home_coin"]:
-        await bg_img.text(
-            "洞天宝钱满了哦~", 820, 701, fm.get("优设标题黑.ttf", 40), "white"
-        )
+        await bg_img.text("洞天宝钱满了哦~", 820, 701, fm.get("优设标题黑.ttf", 40), "white")
     else:
         recover_time = datetime.datetime.now() + datetime.timedelta(
             seconds=int(data["home_coin_recovery_time"])
@@ -89,12 +79,8 @@ async def draw_daily_note_card(data, uid, user_id):
             recover_time_day_str = "今天"
         else:
             recover_time_day_str = str(recover_time.day) + "日"
-        recover_time_str = (
-            f'将于{recover_time_day_str}{recover_time.strftime("%H:%M")}攒满'
-        )
-        await bg_img.text(
-            recover_time_str, 762, 701, fm.get("优设标题黑.ttf", 40), "white"
-        )
+        recover_time_str = f'将于{recover_time_day_str}{recover_time.strftime("%H:%M")}攒满'
+        await bg_img.text(recover_time_str, 762, 701, fm.get("优设标题黑.ttf", 40), "white")
     # 委托文字
     await bg_img.text(
         f"{data['finished_task_num']}/4",
@@ -111,13 +97,9 @@ async def draw_daily_note_card(data, uid, user_id):
         colors=["#507bd0", "#FFFFFF"],
     )
     if data["finished_task_num"] == 4:
-        await bg_img.text(
-            "今日委托已全部完成~", 750, 924, fm.get("优设标题黑.ttf", 40), "white"
-        )
+        await bg_img.text("今日委托已全部完成~", 750, 924, fm.get("优设标题黑.ttf", 40), "white")
     else:
-        await bg_img.text(
-            "今日委托完成情况", 790, 924, fm.get("优设标题黑.ttf", 40), "white"
-        )
+        await bg_img.text("今日委托完成情况", 790, 924, fm.get("优设标题黑.ttf", 40), "white")
     # 质变文字
     if data["transformer"]["obtained"]:
         await bg_img.text(
@@ -136,23 +118,17 @@ async def draw_daily_note_card(data, uid, user_id):
         )
         rt = data["transformer"]["recovery_time"]
         if rt["Day"] == 0 and rt["reached"]:
-            await bg_img.text(
-                "可使用", 465, 1147, fm.get("优设标题黑.ttf", 40), "white"
-            )
+            await bg_img.text("可使用", 465, 1147, fm.get("优设标题黑.ttf", 40), "white")
         elif rt["Day"] == 0 and not rt["reached"]:
             await bg_img.text(
                 f"{rt['Hour']}时后", 463, 1127, fm.get("优设标题黑.ttf", 40), "white"
             )
-            await bg_img.text(
-                "可使用", 465, 1167, fm.get("优设标题黑.ttf", 40), "white"
-            )
+            await bg_img.text("可使用", 465, 1167, fm.get("优设标题黑.ttf", 40), "white")
         else:
             await bg_img.text(
                 f"{rt['Day']}天后", 471, 1127, fm.get("优设标题黑.ttf", 40), "white"
             )
-            await bg_img.text(
-                "可使用", 465, 1167, fm.get("优设标题黑.ttf", 40), "white"
-            )
+            await bg_img.text("可使用", 465, 1167, fm.get("优设标题黑.ttf", 40), "white")
     else:
         await bg_img.text("未获得", 337, 1143, fm.get("优设标题黑.ttf", 48), "white")
     # 周本文字
@@ -182,16 +158,12 @@ async def draw_daily_note_card(data, uid, user_id):
         )
         await bg_img.text("周本减半", 965, 1167, fm.get("优设标题黑.ttf", 40), "white")
     # 深渊文字
-    now = datetime.datetime.now().replace(
-        hour=0, minute=0, second=0, microsecond=0
-    )
+    now = datetime.datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
     abyss_new = (
         now.replace(day=16)
         if now.day < 16
         else now.replace(
-            year=now.year + 1
-            if (next_month := now.month % 12 + 1) == 1
-            else now.year,
+            year=now.year + 1 if (next_month := now.month % 12 + 1) == 1 else now.year,
             month=next_month,
             day=1,
         )
@@ -268,36 +240,24 @@ async def draw_daily_note_card(data, uid, user_id):
                 await bg_img.paste(finished_icon, (i * 200 + 191, 1576))
             i += 1
 
-        await bg_img.text(
-            "派遣全部", 1220, 1580, fm.get("优设标题黑.ttf", 40), "#5680d2"
-        )
-        await bg_img.text(
-            "完成时间", 1220, 1620, fm.get("优设标题黑.ttf", 40), "#5680d2"
-        )
+        await bg_img.text("派遣全部", 1220, 1580, fm.get("优设标题黑.ttf", 40), "#5680d2")
+        await bg_img.text("完成时间", 1220, 1620, fm.get("优设标题黑.ttf", 40), "#5680d2")
         max_time = int(max([s["remained_time"] for s in exp]))
         if max_time == 0:
-            await bg_img.text(
-                "已全部完成~", 1410, 1583, fm.get("优设标题黑.ttf", 60), "#5680d2"
-            )
+            await bg_img.text("已全部完成~", 1410, 1583, fm.get("优设标题黑.ttf", 60), "#5680d2")
         else:
             last_finish_time = datetime.datetime.now() + datetime.timedelta(
                 seconds=max_time
             )
             last_finish_day = (
-                last_finish_time.day > datetime.datetime.now().day
-                and "明天"
-                or "今天"
+                last_finish_time.day > datetime.datetime.now().day and "明天" or "今天"
             )
-            last_finish_str = (
-                f'{last_finish_day}{last_finish_time.strftime("%H:%M")}'
-            )
+            last_finish_str = f'{last_finish_day}{last_finish_time.strftime("%H:%M")}'
             await bg_img.text(
                 last_finish_str, 1408, 1588, fm.get("优设标题黑.ttf", 60), "#5680d2"
             )
     else:
-        await bg_img.text(
-            "未安排派遣", 1408, 1588, fm.get("优设标题黑.ttf", 60), "#5680d2"
-        )
+        await bg_img.text("未安排派遣", 1408, 1588, fm.get("优设标题黑.ttf", 60), "#5680d2")
     role_img = await load_image(
         random.choice(list((RESOURCE_BASE_PATH / "emoticons").iterdir())),
         size=3.5,
