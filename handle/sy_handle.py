@@ -39,7 +39,7 @@ async def get_abyss_info(
         cookie=cookie_info.cookie,
     )
     k = 0
-    for i in range(2):
+    for i in range(3):
         data: dict = (
             await aiorequests.get(
                 url=ABYSS_API,
@@ -73,26 +73,31 @@ async def get_abyss_info(
                     False,
                 )
                 return "遇到验证码，但是过码失败"
+        elif data["retcode"] == 1034 and k == 2:
+            Logger.info(
+                "原神深渊战报",
+                "➤➤",
+                {},
+                f"遇到验证码，但是过码失败",
+                False,
+            )
+            return "米游社遇到验证码，请手动去解决"
+        elif data["retcode"] == 0:
+            Logger.info(
+                "原神深渊战报",
+                "➤➤",
+                {},
+                f"过码成功" if k > 0 else f"获取数据成功",
+            )
+            return data
         else:
-            if data["retcode"] != 1034 and k != 0:
-                Logger.info(
-                    "原神深渊战报",
-                    "➤➤",
-                    {},
-                    f"过码成功",
-                )
-            return "遇到验证码，请手动去解决" if data["retcode"] == 1034 else data
+            return data["message"]
 
 
 async def update_abyss_info(uid, user_id, abyss_index: str):
     data = await get_abyss_info(uid, user_id, schedule_type=abyss_index)
     if not isinstance(data, dict):
         return data
-    elif data["retcode"] != 0:
-        Logger.info(
-            "原神信息", f'更新<m>{uid}</m>的玩家数据时出错，消息为<r>{data["message"]}</r>'
-        )
-        return data["message"]
     await AbyssInfo.update_info(user_id, uid, data["data"])
     Logger.info("原神信息", f"➤UID<m>{uid}</m><g>更新深渊信息成功</g>")
     return await AbyssInfo.get_or_none(user_id=user_id, uid=uid)
@@ -116,7 +121,7 @@ async def _(
         )
         if isinstance(abyss_info, str):
             Logger.info("原神深渊战报", "➤➤", {}, abyss_info, False)
-            msg += f"UID{player.uid}{abyss_info}\n"
+            msg += f"UID{player.uid}{abyss_info},cookie失效或未绑定\n"
         else:
             Logger.info("原神深渊战报", "➤➤", {}, "数据获取成功", True)
             try:
