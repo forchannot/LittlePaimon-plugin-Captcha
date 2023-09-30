@@ -23,7 +23,9 @@ from .handle.sr_sign_handle import sr_bbs_auto_sign
 from .handle.ssbq_handler import get_subs, handle_ssbq, sub_list
 from .utils.logger import Logger
 from .utils.update import do_update
-from .web import web_api, web_page  # noqa
+from .handle.sy_handle import sy as sy
+from .web import web_api as web_api
+from .web import web_page as web_page
 
 __plugin_meta__ = PluginMetadata(
     name="加强小派蒙验证",
