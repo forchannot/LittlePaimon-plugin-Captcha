@@ -15,7 +15,7 @@ from nonebot.plugin import PluginMetadata
 from nonebot.rule import to_me
 from nonebot.typing import T_State
 
-from .captcha.captcha import gain_num
+from .captcha.captcha import gain_num, get_pass_challenge
 from .config.config import config
 from .handle.coin_handle import bbs_auto_coin, mhy_bbs_coin
 from .handle.sign_handle import bbs_auto_sign, mhy_bbs_sign
@@ -156,6 +156,18 @@ update_self = on_command(
         "pm_description": "更新验证签到插件",
         "pm_usage": "@Bot 验证签到插件更新",
         "pm_priority": 10,
+    },
+)
+pass_ch = on_command(
+    "米游社过码",
+    aliases={"主动过码"},
+    priority=1,
+    block=True,
+    state={
+        "pm_name": "米游社过码",
+        "pm_description": "为用户进行米游社过码",
+        "pm_usage": "米游社过码",
+        "pm_priority": 1,
     },
 )
 
@@ -541,3 +553,24 @@ async def _():
     await update_self.send("正在更新验证签到插件，请稍后", at_sender=True)
     result = await do_update()
     await update_self.finish(result, at_sender=True)
+
+
+@pass_ch.handle()
+async def _(
+    event: Union[GroupMessageEvent, PrivateMessageEvent], uid=CommandUID()
+):
+    await pass_ch.send("开始执行米游社过码，请稍后，请不要频繁的执行", at_sender=True)
+    judgment = isinstance(event, GroupMessageEvent)
+    if judgment and event.group_id in config.group_allow_list:
+        Logger.info(f"群聊{event.group_id}在白名单内,开始执行米游社过码")
+        result = await get_pass_challenge(uid, str(event.user_id), config.ssbq_ch)
+    elif event.user_id in config.member_allow_list:
+        Logger.info(f"用户{event.user_id}在白名单内,开始执行米游社过码")
+        result = await get_pass_challenge(uid, str(event.user_id), config.ssbq_ch)
+    else:
+        Logger.info(f"用户{event.user_id}不在白名单内,无法执行过码")
+        await pass_ch.finish("你没有权限执行米游社过码，请联系超管", at_sender=True)
+    if result:
+        await pass_ch.finish("过码成功（也许）", at_sender=True)
+    else:
+        await pass_ch.finish("过码失败", at_sender=True)
