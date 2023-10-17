@@ -18,11 +18,11 @@ BBS_CAPATCH = BBS_API + "/misc/api/createVerification?is_high=true"
 BBS_CAPTCHA_VERIFY = BBS_API + "/misc/api/verifyVerification"
 
 # 签到和米游币的salt
-mihoyobbs_version = "2.46.1"  # Salt和Version相互对应
-mihoyobbs_salt = "KZazpG4cO2QECFDBUCxdhS8cYCsQHfzn"
-mihoyobbs_salt_web = "X7UOLLnTuNS3kgTJ1BUHOvKpiqp3kmym"
-mihoyobbs_salt_x4 = "xV8v4Qu54lUKrEYFZkJhB8cuOh9Asafs"
-mihoyobbs_salt_x6 = "t0qEgfub6cvueAPgR5m9aQWWVciEer7v"
+mihoyobbs_version = "2.60.1"  # Salt和Version相互对应
+mihoyobbs_salt = "AcpNVhfh0oedCobdCyFV8EE1jMOVDy9q" # K2
+mihoyobbs_salt_web = "10JyMNCqFlstEQqqMOv0rKCIdTOoJhNt" # LK2
+mihoyobbs_salt_x4 = "xV8v4Qu54lUKrEYFZkJhB8cuOh9Asafs" # 25
+mihoyobbs_salt_x6 = "t0qEgfub6cvueAPgR5m9aQWWVciEer7v" # 22
 
 # 米游社签到列表
 mihoyo_bbs_List = [
