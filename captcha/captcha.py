@@ -336,5 +336,4 @@ async def gain_num(choice) -> Optional[str]:
         key_num = data.get(info, None)
         if key_num is None:
             return None
-        return str(2333 - int(key_num)) if choice == "sf" else str(key_num)
-    return None
+        return str(key_num)
