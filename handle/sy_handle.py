@@ -57,7 +57,7 @@ async def get_abyss_info(
                 "原神深渊战报",
                 "➤➤",
                 {},
-                f"遇到验证码，开始尝试过码",
+                "遇到验证码，开始尝试过码",
                 True,
             )
             challenge = await get_pass_challenge(uid, user_id, config.ssbq_ch)
@@ -65,20 +65,13 @@ async def get_abyss_info(
                 headers.update({"challenge": challenge})
                 continue
             else:
-                Logger.info(
-                    "原神深渊战报",
-                    "➤➤",
-                    {},
-                    f"过码失败",
-                    False,
-                )
                 return "遇到验证码，但是过码失败"
         elif data["retcode"] == 1034 and k == 2:
             Logger.info(
                 "原神深渊战报",
                 "➤➤",
                 {},
-                f"遇到验证码，但是过码失败",
+                "遇到验证码，过码失败次数达到上限",
                 False,
             )
             return "米游社遇到验证码，请手动去解决"
@@ -87,11 +80,11 @@ async def get_abyss_info(
                 "原神深渊战报",
                 "➤➤",
                 {},
-                f"过码成功" if k > 0 else f"获取数据成功",
+                "获取数据成功",
             )
             return data
         else:
-            return data["message"]
+            return data["message"] + "错误码：" + data["retcode"]
 
 
 async def update_abyss_info(uid, user_id, abyss_index: str):
@@ -121,7 +114,7 @@ async def _(
         )
         if isinstance(abyss_info, str):
             Logger.info("原神深渊战报", "➤➤", {}, abyss_info, False)
-            msg += f"UID{player.uid}{abyss_info},cookie失效或未绑定\n"
+            msg += f"UID{player.uid}{abyss_info}\n"
         else:
             Logger.info("原神深渊战报", "➤➤", {}, "数据获取成功", True)
             try:

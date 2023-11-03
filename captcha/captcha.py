@@ -192,7 +192,7 @@ async def other_api(gt: str, challenge: str):
 async def rrocr(gt: str, challenge: str, referer: str):
     ji_fen = await gain_num("rr")
     if int(ji_fen) < 10:
-        Logger.info("人人打码", info="➤➤", result="积分不足", result_type=False)
+        Logger.info("[人人打码]", info="➤➤", result="积分不足", result_type=False)
         return "j", "j"
     params = {
         "appkey": config.rrocr_key,
@@ -208,13 +208,14 @@ async def rrocr(gt: str, challenge: str, referer: str):
             timeout=60,
         )
     except Exception as e:
-        Logger.info("人人打码", info="➤➤", result=f"请求失败{e}", result_type=False)
+        Logger.info("[人人打码]", info="➤➤", result=f"请求失败{e}", result_type=False)
         return "j", "j"
     if response.status_code != 200:
-        Logger.info("人人打码", info="➤➤", result="请求失败", result_type=False)
+        Logger.info("[人人打码]", info="➤➤", result="请求失败", result_type=False)
         return "j", "j"
     data = response.json()
     if "data" in data and "validate" in data["data"]:
+        Logger.info("[人人打码]", info="➤➤", result="成功", result_type=True)
         validate, challenge = (
             data["data"]["validate"],
             data["data"]["challenge"],
@@ -222,7 +223,7 @@ async def rrocr(gt: str, challenge: str, referer: str):
         return validate, challenge
     else:
         Logger.info(
-            "人人打码", info="➤➤", result=data["msg"], result_type=False
+            "[人人打码]", info="➤➤", result=data["msg"], result_type=False
         )  # 打码失败输出错误信息,返回'j'
         return "j", "j"  # 失败返回'j' 成功返回validate
 
@@ -230,7 +231,7 @@ async def rrocr(gt: str, challenge: str, referer: str):
 async def ttocr(gt: str, challenge: str, referer: str):
     ji_fen = await gain_num("tt")
     if int(ji_fen) < 10:
-        Logger.info("套套打码", info="➤➤", result="积分不足", result_type=False)
+        Logger.info("[套套打码]", info="➤➤", result="积分不足", result_type=False)
         return "j", "j"
     data = {
         "appkey": config.ttocr_key,
@@ -246,14 +247,14 @@ async def ttocr(gt: str, challenge: str, referer: str):
             timeout=60,
         )
     except Exception as e:
-        Logger.info("套套打码", info="➤➤", result=f"请求失败{e}", result_type=False)
+        Logger.info("[套套打码]", info="➤➤", result=f"请求失败{e}", result_type=False)
         return "j", "j"
     if get_id.status_code != 200:
-        Logger.info("套套打码", info="➤➤", result="验证失败", result_type=False)
+        Logger.info("[套套打码]", info="➤➤", result="验证失败", result_type=False)
         return "j", "j"
     get_id = get_id.json()
     result_id = get_id["resultid"]
-    Logger.info("套套打码", info="➤➤", result="等待15s获取结果", result_type=True)
+    Logger.info("[套套打码]", info="➤➤", result="等待15s获取结果", result_type=True)
     await asyncio.sleep(15)
     for i in range(5):
         try:
@@ -267,7 +268,7 @@ async def ttocr(gt: str, challenge: str, referer: str):
             )
         except Exception as e:
             Logger.info(
-                "套套打码", info="➤➤", result=f"第{1+1}请求失败{e}", result_type=False
+                "[套套打码]", info="➤➤", result=f"第{1+1}请求失败{e}", result_type=False
             )
             await asyncio.sleep(1.5)
             continue
@@ -278,7 +279,7 @@ async def ttocr(gt: str, challenge: str, referer: str):
             break
         else:
             Logger.info(
-                "套套打码",
+                "[套套打码]",
                 info="➤➤",
                 result=f"获取结果第{1+1}请求失败，等待1.5s后重试",
                 result_type=False,
@@ -286,17 +287,18 @@ async def ttocr(gt: str, challenge: str, referer: str):
             await asyncio.sleep(1.5)
     else:
         Logger.info(
-            "套套打码", info="➤➤", result="请求失败,可能是网络原因", result_type=False
+            "[套套打码]", info="➤➤", result="请求失败,可能是网络原因", result_type=False
         )
         return "j", "j"
     res = res.json()
     # 失败返回'j' 成功返回validate
     if "data" in res and "validate" in res["data"]:
+        Logger.info("[套套打码]", info="➤➤", result="成功", result_type=True)
         validate, challenge = res["data"]["validate"], res["data"]["challenge"]
         return validate, challenge
     else:
         Logger.info(
-            "套套打码", info="➤➤", result=res["msg"], result_type=False
+            "[套套打码]", info="➤➤", result=res["msg"], result_type=False
         )  # 打码失败输出错误信息,返回'j'
         return "j", "j"
 
@@ -326,7 +328,7 @@ async def gain_num(choice) -> Optional[str]:
         data = await aiorequests.get(option.get("url"))
     except Exception as e:
         Logger.info(
-            f"{choice}打码查询积分", info="➤➤", result=f"请求失败{e}", result_type=False
+            f"[{choice}打码]查询积分", info="➤➤", result=f"请求失败{e}", result_type=False
         )
         return None
     if data.status_code != 200:
