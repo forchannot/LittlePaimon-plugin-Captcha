@@ -34,6 +34,8 @@ async def get_abyss_info(
 ):
     server_id = "cn_qd01" if uid[0] == "5" else "cn_gf01"
     cookie_info = await get_cookie(user_id, uid, True)
+    if not cookie_info:
+        return "未绑定私人cookie或过期太久被移除了"
     headers = mihoyo_headers(
         q=f"role_id={uid}&schedule_type={schedule_type}&server={server_id}",
         cookie=cookie_info.cookie,

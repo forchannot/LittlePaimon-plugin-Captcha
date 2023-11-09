@@ -469,7 +469,7 @@ async def _(
         await sr_sign.finish("请先使用命令[ysb uid]来绑定原神UID")
     if switch is None:
         if f"{event.user_id}-{sr_uid}" in sr_list:
-            await sr_sign.finish(f"你已经在执行签到任务中，请勿重复发送", at_sender=True)
+            await sr_sign.finish("你已经在执行签到任务中，请勿重复发送", at_sender=True)
         else:
             from .handle.sr_sign_handle import sr_sign_in
 

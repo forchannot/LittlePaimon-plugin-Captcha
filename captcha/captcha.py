@@ -186,6 +186,9 @@ async def other_api(gt: str, challenge: str):
         )
         return validate, challenge
     else:
+        Logger.info(
+            "[第三方]", info="➤➤", result=str(data), result_type=False
+        )
         return "j", "j"
 
 
@@ -223,7 +226,7 @@ async def rrocr(gt: str, challenge: str, referer: str):
         return validate, challenge
     else:
         Logger.info(
-            "[人人打码]", info="➤➤", result=data["msg"], result_type=False
+            "[人人打码]", info="➤➤", result=str(data), result_type=False
         )  # 打码失败输出错误信息,返回'j'
         return "j", "j"  # 失败返回'j' 成功返回validate
 
@@ -298,7 +301,7 @@ async def ttocr(gt: str, challenge: str, referer: str):
         return validate, challenge
     else:
         Logger.info(
-            "[套套打码]", info="➤➤", result=res["msg"], result_type=False
+            "[套套打码]", info="➤➤", result=str(res), result_type=False
         )  # 打码失败输出错误信息,返回'j'
         return "j", "j"
 
