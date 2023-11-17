@@ -1,5 +1,6 @@
 import asyncio
 import copy
+from curses.ascii import isdigit
 import json
 import random
 import string
@@ -117,9 +118,7 @@ async def get_pass_challenge(uid: str, user_id: str, way: str):
         "x-rpc-channel": "miyousheluodi",
         "x-rpc-device_id": random_hex(32),
         "x-rpc-device_name": "".join(
-            random.sample(
-                string.ascii_lowercase + string.digits, random.randint(1, 10)
-            )
+            random.sample(string.ascii_lowercase + string.digits, random.randint(1, 10))
         ),
         "x-rpc-device_model": "Mi 10",
         "Referer": "https://app.mihoyo.com",
@@ -186,17 +185,11 @@ async def other_api(gt: str, challenge: str):
         )
         return validate, challenge
     else:
-        Logger.info(
-            "[第三方]", info="➤➤", result=str(data), result_type=False
-        )
+        Logger.info("[第三方]", info="➤➤", result=str(data), result_type=False)
         return "j", "j"
 
 
 async def rrocr(gt: str, challenge: str, referer: str):
-    ji_fen = await gain_num("rr")
-    if int(ji_fen) < 10:
-        Logger.info("[人人打码]", info="➤➤", result="积分不足", result_type=False)
-        return "j", "j"
     params = {
         "appkey": config.rrocr_key,
         "gt": gt,
@@ -232,10 +225,6 @@ async def rrocr(gt: str, challenge: str, referer: str):
 
 
 async def ttocr(gt: str, challenge: str, referer: str):
-    ji_fen = await gain_num("tt")
-    if int(ji_fen) < 10:
-        Logger.info("[套套打码]", info="➤➤", result="积分不足", result_type=False)
-        return "j", "j"
     data = {
         "appkey": config.ttocr_key,
         "gt": gt,
@@ -256,6 +245,9 @@ async def ttocr(gt: str, challenge: str, referer: str):
         Logger.info("[套套打码]", info="➤➤", result="验证失败", result_type=False)
         return "j", "j"
     get_id = get_id.json()
+    if get_id["status"] == 4001:
+        Logger.info("[套套打码]", info="➤➤", result="积分不足", result_type=False)
+        return "j", "j"
     result_id = get_id["resultid"]
     Logger.info("[套套打码]", info="➤➤", result="等待15s获取结果", result_type=True)
     await asyncio.sleep(15)
@@ -329,16 +321,18 @@ async def gain_num(choice) -> Optional[str]:
     success = option.get("success_info")
     try:
         data = await aiorequests.get(option.get("url"))
+        if data.status_code != 200:
+            return None
+        data = data.json()
+        if data.get(success[0]) == success[1]:
+            key_num = data.get(info, None)
+            if key_num is not None:
+                return key_num
     except Exception as e:
         Logger.info(
-            f"[{choice}打码]查询积分", info="➤➤", result=f"请求失败{e}", result_type=False
+            f"[{choice}打码]查询积分",
+            info="➤➤",
+            result=f"请求失败{e}",
+            result_type=False,
         )
         return None
-    if data.status_code != 200:
-        return None
-    data = data.json()
-    if data.get(success[0]) == success[1]:
-        key_num = data.get(info, None)
-        if key_num is None:
-            return None
-        return str(key_num)
