@@ -1,6 +1,5 @@
 import asyncio
 import copy
-from curses.ascii import isdigit
 import json
 import random
 import string
