@@ -53,7 +53,7 @@ async def get_abyss_info(
                 },
             )
         ).json()
-        if data["retcode"] == 1034 and k < 2:
+        if data["retcode"] in (1034, 5003) and k < 2:
             k += 1
             Logger.info(
                 "原神深渊战报",
@@ -68,7 +68,7 @@ async def get_abyss_info(
                 continue
             else:
                 return "遇到验证码，但是过码失败"
-        elif data["retcode"] == 1034 and k == 2:
+        elif data["retcode"] in (1034, 5003) and k == 2:
             Logger.info(
                 "原神深渊战报",
                 "➤➤",
@@ -86,7 +86,7 @@ async def get_abyss_info(
             )
             return data
         else:
-            return data["message"] + "错误码：" + data["retcode"]
+            return data["message"] + "错误码：" + str(data["retcode"])
 
 
 async def update_abyss_info(uid, user_id, abyss_index: str):

@@ -67,7 +67,7 @@ async def handle_ssbq(player: Player, sign_allow: bool):
             False,
         )
         return f"{player.uid}{data}\n"
-    elif data["retcode"] == 1034:
+    elif data["retcode"] in (1034, 5003):
         if (
             config.rrocr_key or config.third_api or config.ttocr_key
         ) and sign_allow:
