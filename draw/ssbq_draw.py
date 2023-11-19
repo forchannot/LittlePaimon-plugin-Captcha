@@ -1,9 +1,6 @@
 import datetime
 import random
 from LittlePaimon.database.models.abyss_info import AbyssInfo
-from LittlePaimon.database.models.cookie import LastQuery
-
-from LittlePaimon.utils.genshin import GenshinInfoManager
 from LittlePaimon.utils.image import PMImage
 from LittlePaimon.utils.image import font_manager as fm
 from LittlePaimon.utils.image import load_image
