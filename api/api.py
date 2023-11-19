@@ -73,6 +73,7 @@ mihoyo_bbs_List = [
 ]
 
 
+# 一一对应
 mys_device_id = [
     "3cf4ac6c-aeef-4e53-8f51-7d623b01d64d",
     "96e46419-62ab-43c7-93e1-a74a88c13484",
