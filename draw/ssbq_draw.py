@@ -9,12 +9,17 @@ from LittlePaimon.utils.message import MessageBuild
 from LittlePaimon.utils.path import RESOURCE_BASE_PATH
 from LittlePaimon.utils.requests import aiorequests
 
+from ..handle.sy_handle import get_abyss_info
+
 
 async def draw_daily_note_card(data, uid, user_id):
-    gim = GenshinInfoManager(user_id, uid)
-    abyss_info = await gim.get_abyss_info(1)
-    if abyss_info.total_star is None:
-        abyss_info.total_star = 0
+    abyss_info = await get_abyss_info(uid, user_id)
+    if isinstance(abyss_info, str):
+        total_star = 0
+    elif abyss_info.total_star is None:
+        total_star = 0
+    else:
+        total_star = abyss_info.total_star
     circle_img = await load_image(RESOURCE_BASE_PATH / "daily_note" / "透明圆.png")
     finished_icon = await load_image(RESOURCE_BASE_PATH / "daily_note" / "finished.png")
     bg_img = PMImage(
@@ -172,7 +177,7 @@ async def draw_daily_note_card(data, uid, user_id):
     left_day = (abyss_new - now).days
     # total_day = (abyss_new - abyss_now).days
     await bg_img.text(
-        f"{abyss_info.total_star}/36",
+        f"{total_star}/36",
         337,
         1358,
         fm.get("number.ttf", 48),
@@ -182,7 +187,7 @@ async def draw_daily_note_card(data, uid, user_id):
         f"本期深渊还有{left_day}天结束", 745, 1358, fm.get("优设标题黑.ttf", 40), "white"
     )
     await bg_img.draw_ring(
-        percent=abyss_info.total_star / 36,
+        percent=total_star / 36,
         pos=(100, 1249),
         size=(266, 266),
         width=0.18,
