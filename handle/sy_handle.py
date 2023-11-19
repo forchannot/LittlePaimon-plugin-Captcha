@@ -87,6 +87,7 @@ async def get_abyss_info(
                 {},
                 "获取数据成功",
             )
+            await AbyssInfo.update_info(user_id, uid, data['data'])
             return data
         else:
             return data["message"] + "错误码：" + str(data["retcode"])

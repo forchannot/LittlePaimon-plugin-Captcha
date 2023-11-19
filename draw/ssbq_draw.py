@@ -1,5 +1,7 @@
 import datetime
 import random
+from LittlePaimon.database.models.abyss_info import AbyssInfo
+from LittlePaimon.database.models.cookie import LastQuery
 
 from LittlePaimon.utils.genshin import GenshinInfoManager
 from LittlePaimon.utils.image import PMImage
@@ -9,11 +11,12 @@ from LittlePaimon.utils.message import MessageBuild
 from LittlePaimon.utils.path import RESOURCE_BASE_PATH
 from LittlePaimon.utils.requests import aiorequests
 
+
 from ..handle.sy_handle import get_abyss_info
 
-
 async def draw_daily_note_card(data, uid, user_id):
-    abyss_info = await get_abyss_info(uid, user_id)
+    await get_abyss_info(uid, user_id)
+    abyss_info = await AbyssInfo.get_or_none(user_id=user_id, uid=uid)
     if isinstance(abyss_info, str):
         total_star = 0
     elif abyss_info.total_star is None:
