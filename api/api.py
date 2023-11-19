@@ -11,7 +11,9 @@ BBS_LIST_URL = (
     "}&is_good=false&is_hot=false&page_size=20&sort_type=1"
 )
 BBS_DETAIL_URL = "https://bbs-api.mihoyo.com/post/api/getPostFull?post_id={}"
-BBS_SHARE_URL = "https://bbs-api.mihoyo.com/apihub/api/getShareConf?entity_id={}&entity_type=1"
+BBS_SHARE_URL = (
+    "https://bbs-api.mihoyo.com/apihub/api/getShareConf?entity_id={}&entity_type=1"
+)
 BBS_LIKE_URL = "https://bbs-api.mihoyo.com/apihub/sapi/upvotePost"
 BBS_API = "https://bbs-api.mihoyo.com"
 BBS_CAPATCH = BBS_API + "/misc/api/createVerification?is_high=true"
@@ -69,3 +71,12 @@ mihoyo_bbs_List = [
         "url": "https://bbs.mihoyo.com/zzz/",
     },
 ]
+
+
+mys_device_id = [
+    "3cf4ac6c-aeef-4e53-8f51-7d623b01d64d",
+    "96e46419-62ab-43c7-93e1-a74a88c13484",
+    "82b55cf4-8c5b-4b05-9be7-cf11074669c9",
+    "0bfd2fa7-0e8e-4e4c-ace0-9a7bb0eab6a6",
+]
+mys_device_fp = ["38d7f1d1d0fff", "38d7f1d1fe1c7", "38d7f1d1fe1c7", "38d7f1d1fe1c7"]

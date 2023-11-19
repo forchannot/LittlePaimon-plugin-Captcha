@@ -9,6 +9,7 @@ from nonebot import on_command
 from nonebot.adapters.onebot.v11 import Message, MessageEvent
 from nonebot.params import CommandArg
 
+from ..api.api import mys_device_fp, mys_device_id
 from ..captcha.captcha import get_pass_challenge
 from ..config.config import config
 from ..utils.logger import Logger
@@ -41,8 +42,8 @@ async def get_abyss_info(
         cookie=cookie_info.cookie,
     )
     # 暂时用一个固定的device_id和device_fp
-    headers["x-rpc-device_id"] = "3cf4ac6c-aeef-4e53-8f51-7d623b01d64d"
-    headers["x-rpc-device_fp"] = "38d7f1d1d0fff"
+    headers["x-rpc-device_id"] = mys_device_id[0]
+    headers["x-rpc-device_fp"] = mys_device_fp[0]
     k = 0
     for i in range(3):
         data: dict = (

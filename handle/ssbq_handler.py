@@ -18,6 +18,7 @@ from nonebot import get_bot
 from nonebot.adapters.onebot.v11 import Message
 from nonebot.params import CommandArg, Depends
 
+from ..api.api import mys_device_fp, mys_device_id
 from ..captcha.captcha import get_pass_challenge
 from ..config.config import config
 from ..draw.ssbq_draw import draw_daily_note_card
@@ -61,8 +62,8 @@ async def handle_ssbq(player: Player, sign_allow: bool):
         cookie=cookie_info.cookie,
         q=f"role_id={player.uid}&server={server_id}",
     )
-    headers["x-rpc-device_id"] = "3cf4ac6c-aeef-4e53-8f51-7d623b01d64d"
-    headers["x-rpc-device_fp"] = "38d7f1d1d0fff"
+    headers["x-rpc-device_id"] = mys_device_id[0]
+    headers["x-rpc-device_fp"] = mys_device_fp[0]
     data = await aiorequests.get(
         url=DAILY_NOTE_API,
         headers=headers,
