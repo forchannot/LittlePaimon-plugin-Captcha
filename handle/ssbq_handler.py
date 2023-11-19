@@ -12,13 +12,13 @@ from LittlePaimon.database import (
     PrivateCookie,
 )
 from LittlePaimon.utils import scheduler
-from LittlePaimon.utils.api import DAILY_NOTE_API, get_mihoyo_private_data
+from LittlePaimon.utils.api import DAILY_NOTE_API, get_cookie, get_mihoyo_private_data, mihoyo_headers
 from LittlePaimon.utils.requests import aiorequests
 from nonebot import get_bot
 from nonebot.adapters.onebot.v11 import Message
 from nonebot.params import CommandArg, Depends
 
-from ..captcha.captcha import get_pass_challenge, mihoyo_headers
+from ..captcha.captcha import get_pass_challenge
 from ..config.config import config
 from ..draw.ssbq_draw import draw_daily_note_card
 from ..utils.logger import Logger
@@ -55,9 +55,20 @@ async def get_subs(**kwargs) -> str:
 
 async def handle_ssbq(player: Player, sign_allow: bool):
     await LastQuery.update_last_query(player.user_id, player.uid)
-    data = await get_mihoyo_private_data(
-        player.uid, player.user_id, "daily_note"
+    server_id = "cn_qd01" if player.uid[0] == "5" else "cn_gf01"
+    cookie_info = await get_cookie(player.user_id, player.uid, True, True)
+    headers = mihoyo_headers(
+        cookie=cookie_info.cookie,
+        q=f"role_id={player.uid}&server={server_id}",
     )
+    headers["x-rpc-device_id"] = "3cf4ac6c-aeef-4e53-8f51-7d623b01d64d"
+    headers["x-rpc-device_fp"] = "38d7f1d1d0fff"
+    data = await aiorequests.get(
+        url=DAILY_NOTE_API,
+        headers=headers,
+        params={"server": server_id, "role_id": player.uid},
+    )
+    data = data.json()
     if isinstance(data, str):
         Logger.info(
             "原神实时便签",
@@ -67,10 +78,8 @@ async def handle_ssbq(player: Player, sign_allow: bool):
             False,
         )
         return f"{player.uid}{data}\n"
-    elif data["retcode"] in (1034, 5003):
-        if (
-            config.rrocr_key or config.third_api or config.ttocr_key
-        ) and sign_allow:
+    elif data["retcode"] == 1034:
+        if (config.rrocr_key or config.third_api or config.ttocr_key) and sign_allow:
             Logger.info(
                 "原神实时便签",
                 "➤➤",
@@ -131,13 +140,14 @@ async def handle_ssbq(player: Player, sign_allow: bool):
         return f'{player.uid}获取数据失败，msg为{data["message"]}\n'
     else:
         Logger.info(
-            "原神实时便签", "➤➤", {"用户": player.user_id, "UID": player.uid}, "获取数据成功"
+            "原神实时便签",
+            "➤➤",
+            {"用户": player.user_id, "UID": player.uid},
+            "获取数据成功",
         )
 
         try:
-            img = await draw_daily_note_card(
-                data["data"], player.uid, player.user_id
-            )
+            img = await draw_daily_note_card(data["data"], player.uid, player.user_id)
             Logger.info(
                 "原神实时便签",
                 "➤➤",
@@ -156,9 +166,7 @@ async def handle_ssbq(player: Player, sign_allow: bool):
             return f"{player.uid}绘制图片失败，{e}\n"
 
 
-@scheduler.scheduled_job(
-    "cron", minute=f"*/{config.ssbq_check}", misfire_grace_time=10
-)
+@scheduler.scheduled_job("cron", minute=f"*/{config.ssbq_check}", misfire_grace_time=10)
 async def check_note():
     if not config.ssbq_enable:
         return

@@ -40,6 +40,9 @@ async def get_abyss_info(
         q=f"role_id={uid}&schedule_type={schedule_type}&server={server_id}",
         cookie=cookie_info.cookie,
     )
+    # 暂时用一个固定的device_id和device_fp
+    headers["x-rpc-device_id"] = "3cf4ac6c-aeef-4e53-8f51-7d623b01d64d"
+    headers["x-rpc-device_fp"] = "38d7f1d1d0fff"
     k = 0
     for i in range(3):
         data: dict = (
@@ -53,7 +56,7 @@ async def get_abyss_info(
                 },
             )
         ).json()
-        if data["retcode"] in (1034, 5003) and k < 2:
+        if data["retcode"] == 1034 and k < 2:
             k += 1
             Logger.info(
                 "原神深渊战报",
@@ -68,7 +71,7 @@ async def get_abyss_info(
                 continue
             else:
                 return "遇到验证码，但是过码失败"
-        elif data["retcode"] in (1034, 5003) and k == 2:
+        elif data["retcode"] == 1034 and k == 2:
             Logger.info(
                 "原神深渊战报",
                 "➤➤",
