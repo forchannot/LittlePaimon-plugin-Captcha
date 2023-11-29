@@ -12,7 +12,12 @@ from LittlePaimon.database import (
     PrivateCookie,
 )
 from LittlePaimon.utils import scheduler
-from LittlePaimon.utils.api import DAILY_NOTE_API, get_cookie, get_mihoyo_private_data, mihoyo_headers
+from LittlePaimon.utils.api import (
+    DAILY_NOTE_API,
+    get_cookie,
+    get_mihoyo_private_data,
+    mihoyo_headers,
+)
 from LittlePaimon.utils.requests import aiorequests
 from nonebot import get_bot
 from nonebot.adapters.onebot.v11 import Message
@@ -92,17 +97,10 @@ async def handle_ssbq(player: Player, sign_allow: bool):
                 player.uid, player.user_id, config.ssbq_ch
             )
             if challenge is not None:
-                server_id = "cn_qd01" if player.uid[0] == "5" else "cn_gf01"
-                cookie_info = await PrivateCookie.get_or_none(
-                    user_id=player.user_id, uid=player.uid
-                )
+                headers.update({"challenge": challenge})
                 res = await aiorequests.get(
                     url=DAILY_NOTE_API,
-                    headers=mihoyo_headers(
-                        q=f"role_id={player.uid}&server={server_id}",
-                        cookie=cookie_info.cookie,
-                        challenge=challenge,
-                    ),
+                    headers=headers,
                     params={"server": server_id, "role_id": player.uid},
                 )
                 data = res.json()
