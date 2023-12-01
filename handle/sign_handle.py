@@ -43,17 +43,14 @@ async def sign_action(
     HEADER["Cookie"] = cookie_info.cookie
     HEADER["x-rpc-device_id"] = random_hex(32)
     HEADER["X_Requested_With"] = "com.mihoyo.hyperion"
+    HEADER["x-rpc-signgame"] = "hk4e"
     HEADER["DS"] = get_ds2(web=True)
-    HEADER["Referer"] = (
-        "https://webstatic.mihoyo.com/bbs/event/signin-ys/index.html"
-        "?bbs_auth_required=true&act_id=e202009291139501&utm_source=bbs"
-        "&utm_medium=mys&utm_campaign=icon"
-    )
+    HEADER["Referer"] = "https://act.mihoyo.com/"
     HEADER.update(Header)
     req = await aiorequests.post(
         url=SIGN_ACTION_API,
         headers=HEADER,
-        json={"act_id": "e202009291139501", "uid": uid, "region": server_id},
+        json={"act_id": "e202311201442471", "uid": uid, "region": server_id},
     )
     data = req.json()
     if await check_retcode(data, cookie_info, user_id, uid):
@@ -85,6 +82,15 @@ async def mhy_bbs_sign(
         )
         await MihoyoBBSSub.filter(user_id=user_id, uid=uid).delete()
         return SignResult.FAIL, sign_info
+    elif sign_info["retcode"] != 0:
+        Logger.info(
+            "原神签到",
+            "➤➤",
+            {"用户": user_id, "UID": uid},
+            f"获取签到信息失败，{sign_info}",
+            False,
+        )
+        return SignResult.FAIL, f"retcode: {str(sign_info)}"
     elif sign_info["data"]["is_sign"]:
         signed_days = sign_info["data"]["total_sign_day"] - 1
         Logger.info("原神签到", "➤➤", {"用户": user_id, "UID": uid}, "今天已经签过了")

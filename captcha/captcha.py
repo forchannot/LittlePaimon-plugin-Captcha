@@ -34,8 +34,8 @@ _HEADER = {
     "User-Agent": "Mozilla/5.0 (Linux; Android 12; Unspecified Device) AppleWebKit/537.36 (KHTML, like Gecko) "
     f"Version/4.0 Chrome/103.0.5060.129 Mobile Safari/537.36 miHoYoBBS/{mihoyobbs_version}",
     "x-rpc-client_type": "5",
-    "Referer": "https://webstatic.mihoyo.com/",
-    "Origin": "https://webstatic.mihoyo.com",
+    "Referer": "https://act.mihoyo.com",
+    "Origin": "https://act.mihoyo.com",
 }
 
 
@@ -54,10 +54,12 @@ def mihoyo_headers(cookie, challenge, q="", b=None) -> Dict:
 
 
 async def get_sign_list() -> Dict:
+    header = copy.deepcopy(_HEADER)
+    header["x-rpc-signgame"] = "hk4e"
     req = await aiorequests.get(
         url=SIGN_REWARD_API,
-        headers=_HEADER,
-        params={"act_id": "e202009291139501"},
+        headers=header,
+        params={"act_id": "e202311201442471"},
     )
     data = req.json()
     return data
@@ -67,11 +69,12 @@ async def get_sign_info(user_id: str, uid: str) -> Dict:
     cookie_info = await PrivateCookie.get_or_none(user_id=user_id, uid=uid)
     server_id = "cn_qd01" if uid[0] == "5" else "cn_gf01"
     header = copy.deepcopy(_HEADER)
+    header["x-rpc-signgame"] = "hk4e"
     header["Cookie"] = cookie_info.cookie
     req = await aiorequests.get(
         url=SIGN_INFO_API,
         headers=header,
-        params={"act_id": "e202009291139501", "region": server_id, "uid": uid},
+        params={"act_id": "e202311201442471", "region": server_id, "uid": uid},
     )
     data = req.json()
     return data
@@ -93,15 +96,15 @@ def get_ds2(web: bool) -> str:
     return f"{i},{r},{c}"
 
 
-def get_ds_x6(q: str = "", b: Dict = None, sign: bool = False) -> str:
-    b = json.dumps(b) if b else ""
+def get_ds_x6(q: str = "", b: Dict = {}, sign: bool = False) -> str:
+    b_ = json.dumps(b) if b else ""
     if sign:
         n = mihoyobbs_salt_x6
     else:
         n = mihoyobbs_salt_x4
     i = str(int(time.time()))
     r = str(random.randint(100000, 200000))
-    add = f"&b={b}&q={q}"
+    add = f"&b={b_}&q={q}"
     c = md5("salt=" + n + "&t=" + i + "&r=" + r + add)
     return f"{i},{r},{c}"
 
