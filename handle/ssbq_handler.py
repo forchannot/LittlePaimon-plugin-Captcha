@@ -63,6 +63,8 @@ async def handle_ssbq(player: Player, sign_allow: bool):
     await LastQuery.update_last_query(player.user_id, player.uid)
     server_id = "cn_qd01" if player.uid[0] == "5" else "cn_gf01"
     cookie_info = await get_cookie(player.user_id, player.uid, True, True)
+    if not cookie_info:
+        return "你还未绑定ck或失效太久被移除了，发送[原神扫码绑定]来绑定ck吧"
     headers = mihoyo_headers(
         cookie=cookie_info.cookie,
         q=f"role_id={player.uid}&server={server_id}",
@@ -75,16 +77,7 @@ async def handle_ssbq(player: Player, sign_allow: bool):
         params={"server": server_id, "role_id": player.uid},
     )
     data = data.json()
-    if isinstance(data, str):
-        Logger.info(
-            "原神实时便签",
-            "➤➤",
-            {"用户": player.user_id, "UID": player.uid},
-            f"获取数据失败, {data}",
-            False,
-        )
-        return f"{player.uid}{data}\n"
-    elif data["retcode"] == 1034:
+    if data["retcode"] == 1034:
         if (config.rrocr_key or config.third_api or config.ttocr_key) and sign_allow:
             Logger.info(
                 "原神实时便签",
