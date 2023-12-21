@@ -11,10 +11,12 @@ from LittlePaimon.utils.api import get_cookie
 from LittlePaimon.utils.requests import aiorequests
 from nonebot import get_bot
 
+from ..api.api import mihoyobbs_version
 from ..captcha.captcha import _HEADER, get_ds2, get_validate
 from ..config.config import config
 from ..draw.sign_draw import SignResult, draw_result
 from ..utils.logger import Logger
+
 
 # 铁道签到列表
 OLD_URL = "https://api-takumi.mihoyo.com"
@@ -30,7 +32,7 @@ async def sr_mihoyo_bbs_sign(uid: str, ck: str, Header=None) -> dict:
         Header = {}
     HEADER = copy.deepcopy(_HEADER)
     HEADER["Cookie"] = ck
-    HEADER["x-rpc-app_version"] = "2.44.1"
+    HEADER["x-rpc-app_version"] = mihoyobbs_version
     HEADER["x-rpc-client_type"] = "5"
     HEADER["X_Requested_With"] = "com.mihoyo.hyperion"
     HEADER["DS"] = get_ds2(web=True)
